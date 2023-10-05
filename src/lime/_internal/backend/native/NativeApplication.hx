@@ -202,11 +202,17 @@ class NativeApplication
 
 			case BUTTON_DOWN:
 				var gamepad = Gamepad.devices.get(gamepadEventInfo.id);
-				if (gamepad != null) gamepad.onButtonDown.dispatch(gamepadEventInfo.button);
+				if (gamepad != null) {
+					gamepad.onButtonDown.dispatch(gamepadEventInfo.button);
+					gamepad.onButtonDownPrecise.dispatch(gamepadEventInfo.button, gamepadEventInfo.timestamp);
+				}
 
 			case BUTTON_UP:
 				var gamepad = Gamepad.devices.get(gamepadEventInfo.id);
-				if (gamepad != null) gamepad.onButtonUp.dispatch(gamepadEventInfo.button);
+				if (gamepad != null) {
+					gamepad.onButtonUp.dispatch(gamepadEventInfo.button);
+					gamepad.onButtonUpPrecise.dispatch(gamepadEventInfo.button, gamepadEventInfo.timestamp);
+				}
 
 			case CONNECT:
 				Gamepad.__connect(gamepadEventInfo.id);
@@ -699,13 +705,22 @@ class NativeApplication
 	public var type:GamepadEventType;
 	public var axisValue:Float;
 
-	public function new(type:GamepadEventType = null, id:Int = 0, button:Int = 0, axis:Int = 0, value:Float = 0)
+	/**
+	 * The timestamp, in milliseconds, of when the event occurred.
+	 * Relative to `lime_sdl_get_ticks()`
+	 * May be `0` if timestamp could not be determined.
+	 */
+	public var timestamp:Int64;
+
+	public function new(type:GamepadEventType = null, id:Int = 0, button:Int = 0, axis:Int = 0, value:Float = 0, timestamp:Null<Int64> = null)
 	{
 		this.type = type;
 		this.id = id;
 		this.button = button;
 		this.axis = axis;
 		this.axisValue = value;
+
+		this.timestamp = timestamp == null ? Int64.ofInt(0) : timestamp;
 	}
 
 	public function clone():GamepadEventInfo

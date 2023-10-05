@@ -174,6 +174,22 @@ class Application extends Module
 	public function onGamepadButtonUp(gamepad:Gamepad, button:GamepadButton):Void {}
 
 	/**
+		Called when a gamepad button down event is fired
+		@param	gamepad	The current gamepad
+		@param	button	The button that was pressed
+		@param	timestamp 	The timestamp of the event
+	**/
+	public function onGamepadButtonDownPrecise(gamepad:Gamepad, button:GamepadButton, timestamp:Int64):Void {}
+
+	/**
+		Called when a gamepad button up event is fired
+		@param	gamepad	The current gamepad
+		@param	button	The button that was released
+		@param	timestamp 	The timestamp of the event
+	**/
+	public function onGamepadButtonUpPrecise(gamepad:Gamepad, button:GamepadButton, timestamp:Int64):Void {}
+
+	/**
 		Called when a gamepad is connected
 		@param	gamepad	The gamepad that was connected
 	**/
@@ -499,6 +515,8 @@ class Application extends Module
 				window.onFullscreen.add(onWindowFullscreen);
 				window.onKeyDown.add(onKeyDown);
 				window.onKeyUp.add(onKeyUp);
+				window.onKeyDownPrecise.add(onKeyDownPrecise);
+				window.onKeyUpPrecise.add(onKeyUpPrecise);
 				window.onLeave.add(onWindowLeave);
 				window.onMinimize.add(onWindowMinimize);
 				window.onMouseDown.add(onMouseDown);
@@ -582,6 +600,8 @@ class Application extends Module
 		gamepad.onAxisMove.add(onGamepadAxisMove.bind(gamepad));
 		gamepad.onButtonDown.add(onGamepadButtonDown.bind(gamepad));
 		gamepad.onButtonUp.add(onGamepadButtonUp.bind(gamepad));
+		gamepad.onButtonDownPrecise.add(onGamepadButtonDownPrecise.bind(gamepad));
+		gamepad.onButtonUpPrecise.add(onGamepadButtonUpPrecise.bind(gamepad));
 		gamepad.onDisconnect.add(onGamepadDisconnect.bind(gamepad));
 	}
 

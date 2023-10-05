@@ -619,13 +619,17 @@ class HTML5Application
 									default: continue;
 								}
 
+								var timestamp = haxe.Int64.fromFloat(js.Browser.window.performance.now());
+
 								if (value > 0)
 								{
 									gamepad.onButtonDown.dispatch(button);
+									gamepad.onButtonDownPrecise.dispatch(button, timestamp);
 								}
 								else
 								{
 									gamepad.onButtonUp.dispatch(button);
+									gamepad.onButtonUpPrecise.dispatch(button, timestamp);
 								}
 							}
 						}
