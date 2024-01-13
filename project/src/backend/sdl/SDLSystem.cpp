@@ -87,7 +87,7 @@ namespace lime {
 	}
 
 
-	long System::GetTicks () {
+	int System::GetTicks () {
 
 		return SDL_GetTicks ();
 

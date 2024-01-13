@@ -65,6 +65,7 @@ namespace lime {
 				eventObject->id = event->id;
 				eventObject->type = event->type;
 				eventObject->axisValue = event->axisValue;
+				eventObject->timestamp = event->timestamp;
 
 			}
 
