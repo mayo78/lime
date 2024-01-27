@@ -178,6 +178,7 @@ class NativeAudioSource
 
 		if (stream)
 		{
+
 			setCurrentTime(getCurrentTime());
 
 			streamTimer = new Timer(STREAM_TIMER_FREQUENCY);
@@ -381,11 +382,17 @@ class NativeAudioSource
 				var ratio = (offset / dataLength);
 				var totalSeconds = samples / parent.buffer.sampleRate;
 
-				var time = Std.int(totalSeconds * ratio * 1000) - parent.offset;
-
+				var sampleTime = AL.getSourcef(handle, AL.SAMPLE_OFFSET);
+				// var time = (sampleTime / parent.buffer.sampleRate * 1000) - parent.offset;
+				// var time = Std.int(totalSeconds * ratio * 1000) - parent.offset;
 				// var time = Std.int (AL.getSourcef (handle, AL.SEC_OFFSET) * 1000) - parent.offset;
+				var value = AL.getSourcedvSOFT(handle, AL.SEC_OFFSET_CLOCK_SOFT);
+				var deviceOffset:Float = value[1];
+				var realOffset:Float = value[0];
+				var time = Std.int((deviceOffset - realOffset) * 1000) - parent.offset;
+
 				if (time < 0) return 0;
-				return time;
+				return Std.int(time);
 			}
 		}
 
