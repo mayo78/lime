@@ -2665,14 +2665,14 @@ namespace lime {
 
 	int lime_sdl_get_ticks () {
 
-		return System::GetTicks ();
+		return System::GetTicks();
 
 	}
 
 
 	HL_PRIM int HL_NAME(hl_sdl_get_ticks) () {
 
-		return System::GetTicks ();
+		return System::GetTicks();
 
 	}
 
@@ -4014,9 +4014,9 @@ namespace lime {
 	#define _TCLIPBOARD_EVENT _OBJ (_I32)
 	#define _TDISPLAYMODE _OBJ (_I32 _I32 _I32 _I32)
 	#define _TDROP_EVENT _OBJ (_BYTES _I32)
-	#define _TGAMEPAD_EVENT _OBJ (_I32 _I32 _I32 _I32 _F64)
+	#define _TGAMEPAD_EVENT _OBJ (_I32 _I32 _I32 _I32 _F64 _I32)
 	#define _TJOYSTICK_EVENT _OBJ (_I32 _I32 _I32 _I32 _F64 _F64)
-	#define _TKEY_EVENT _OBJ (_F64 _I32 _I32 _I32)
+	#define _TKEY_EVENT _OBJ (_F64 _I32 _I32 _I32 _I32)
 	#define _TMOUSE_EVENT _OBJ (_I32 _F64 _F64 _I32 _I32 _F64 _F64)
 	#define _TRECTANGLE _OBJ (_F64 _F64 _F64 _F64)
 	#define _TRENDER_EVENT _OBJ (_I32)
@@ -4130,7 +4130,7 @@ namespace lime {
 	DEFINE_HL_PRIM (_TIMAGEBUFFER, hl_png_decode_bytes, _TBYTES _BOOL _TIMAGEBUFFER);
 	DEFINE_HL_PRIM (_TIMAGEBUFFER, hl_png_decode_file, _STRING _BOOL _TIMAGEBUFFER);
 	DEFINE_HL_PRIM (_VOID, hl_render_event_manager_register, _FUN (_VOID, _NO_ARG) _TRENDER_EVENT);
-	DEFINE_HL_PRIM (_I64, hl_sdl_get_ticks, _FUN (_VOID, _NO_ARG) _TRENDER_EVENT);
+	DEFINE_HL_PRIM (_I32, hl_sdl_get_ticks, _NO_ARG);
 	DEFINE_HL_PRIM (_VOID, hl_sensor_event_manager_register, _FUN (_VOID, _NO_ARG) _TSENSOR_EVENT);
 	DEFINE_HL_PRIM (_BOOL, hl_system_get_allow_screen_timeout, _NO_ARG);
 	DEFINE_HL_PRIM (_BYTES, hl_system_get_device_model, _NO_ARG);

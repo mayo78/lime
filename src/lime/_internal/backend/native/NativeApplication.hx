@@ -709,18 +709,18 @@ class NativeApplication
 	 * The timestamp, in milliseconds, of when the event occurred.
 	 * Relative to `lime_sdl_get_ticks()`
 	 * May be `0` if timestamp could not be determined.
+	 * TODO: Replace with `Int64` when I figure out how to return one from HashLink
 	 */
-	public var timestamp:Int64;
+	public var timestamp:Int;
 
-	public function new(type:GamepadEventType = null, id:Int = 0, button:Int = 0, axis:Int = 0, value:Float = 0, timestamp:Null<Int64> = null)
+	public function new(type:GamepadEventType = null, id:Int = 0, button:Int = 0, axis:Int = 0, value:Float = 0, ?timestamp:Int = 0)
 	{
 		this.type = type;
 		this.id = id;
 		this.button = button;
 		this.axis = axis;
 		this.axisValue = value;
-
-		this.timestamp = timestamp == null ? Int64.ofInt(0) : timestamp;
+		this.timestamp = timestamp;
 	}
 
 	public function clone():GamepadEventInfo
@@ -784,16 +784,17 @@ class NativeApplication
 	 * The timestamp, in milliseconds, of when the event occurred.
 	 * Relative to `lime_sdl_get_ticks()`
 	 * May be `0` if timestamp could not be determined.
+	 * TODO: Replace with `Int64` when I figure out how to return one from HashLink
 	 */
-	public var timestamp:Int64;
+	public var timestamp:Int;
 
-	public function new(type:KeyEventType = null, windowID:Int = 0, keyCode: Float = 0, modifier:Int = 0, timestamp:Null<Int64> = null)
+	public function new(type:KeyEventType = null, windowID:Int = 0, keyCode: Float = 0, modifier:Int = 0, ?timestamp:Int = 0)
 	{
 		this.type = type;
 		this.windowID = windowID;
 		this.keyCode = keyCode;
 		this.modifier = modifier;
-		this.timestamp = timestamp == null ? Int64.ofInt(0) : timestamp;
+		this.timestamp = timestamp;
 	}
 
 	public function clone():KeyEventInfo
