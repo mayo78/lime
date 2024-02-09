@@ -2,14 +2,14 @@ package lime._internal.backend.native;
 
 import haxe.Int64;
 import haxe.io.Bytes;
-import lime.graphics.Image;
-import lime.graphics.ImageBuffer;
 import lime.graphics.opengl.GLBuffer;
 import lime.graphics.opengl.GLFramebuffer;
 import lime.graphics.opengl.GLProgram;
 import lime.graphics.opengl.GLRenderbuffer;
 import lime.graphics.opengl.GLShader;
 import lime.graphics.opengl.GLTexture;
+import lime.graphics.Image;
+import lime.graphics.ImageBuffer;
 import lime.math.Rectangle;
 import lime.media.openal.ALAuxiliaryEffectSlot;
 import lime.utils.DataPointer;
@@ -19,9 +19,9 @@ import lime.graphics.cairo.CairoGlyph;
 import lime.graphics.opengl.GL;
 import lime.math.Matrix3;
 import lime.math.Vector2;
-import lime.media.AudioBuffer;
 import lime.media.openal.ALContext;
 import lime.media.openal.ALDevice;
+import lime.media.AudioBuffer;
 import lime.system.DisplayMode;
 import lime.utils.ArrayBufferView;
 #end
