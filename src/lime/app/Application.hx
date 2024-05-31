@@ -549,7 +549,7 @@ class Application extends Module
 	{
 		application.onUpdate.add(update);
 		application.onExit.add(onModuleExit, false, 0);
-		application.onExit.add(__onModuleExit, false, 0);
+		application.onExit.add(__onModuleExit, false, -1000);
 
 		for (gamepad in Gamepad.devices)
 		{
@@ -584,13 +584,21 @@ class Application extends Module
 			__windowByID.remove(window.id);
 			window.close();
 
-			if (__windows.length == 0)
-			{
-				#if !lime_doc_gen
-				System.exit(0);
-				#end
-			}
+			__checkForAllWindowsClosed();
 		}
+	}
+
+	@:noCompletion private function __checkForAllWindowsClosed():Void
+	{
+		// air handles this automatically with NativeApplication.autoExit
+		#if !air
+		if (__windows.length == 0)
+		{
+			#if !lime_doc_gen
+			System.exit(0);
+			#end
+		}
+		#end
 	}
 
 	@:noCompletion private function __onGamepadConnect(gamepad:Gamepad):Void
@@ -619,7 +627,17 @@ class Application extends Module
 
 	@:noCompletion private function __onModuleExit(code:Int):Void
 	{
+		if (onExit.canceled)
+		{
+			return;
+		}
+
+		__unregisterLimeModule(this);
 		__backend.exit();
+		if (Application.current == this)
+		{
+			Application.current = null;
+		}
 	}
 
 	@:noCompletion private function __onWindowClose(window:Window):Void
@@ -644,8 +662,6 @@ class Application extends Module
 		Touch.onStart.remove(onTouchStart);
 		Touch.onMove.remove(onTouchMove);
 		Touch.onEnd.remove(onTouchEnd);
-
-		onModuleExit(0);
 	}
 
 	// Get & Set Methods
@@ -665,9 +681,7 @@ class Application extends Module
 	}
 }
 
-#if kha
-@:noCompletion private typedef ApplicationBackend = lime._internal.backend.kha.KhaApplication;
-#elseif air
+#if air
 @:noCompletion private typedef ApplicationBackend = lime._internal.backend.air.AIRApplication;
 #elseif flash
 @:noCompletion private typedef ApplicationBackend = lime._internal.backend.flash.FlashApplication;

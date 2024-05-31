@@ -136,7 +136,7 @@ class NativeAudioSource
 			}
 		}
 
-		samples = Std.int((dataLength * 8) / (parent.buffer.channels * parent.buffer.bitsPerSample));
+		samples = Std.int((dataLength * 8.0) / (parent.buffer.channels * parent.buffer.bitsPerSample));
 	}
 
 	public function play():Void
@@ -569,7 +569,7 @@ class NativeAudioSource
 	{
 		if (handle != null)
 		{
-			#if !emscripten
+			#if !webassembly
 			var value = AL.getSource3f(handle, AL.POSITION);
 			position.x = value[0];
 			position.y = value[1];
