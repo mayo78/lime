@@ -5,3 +5,5 @@
 [receive.fsck]
 	missingSpaceBeforeDate = ignore
 
+[fsck]
+	skipList = .git-fsck-skiplist
