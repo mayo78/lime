@@ -1,2 +1,7 @@
-[transfer]
- fsckObjects = false
+[fsck]
+	missingSpaceBeforeDate = ignore
+[fetch.fsck]
+	missingSpaceBeforeDate = ignore
+[receive.fsck]
+	missingSpaceBeforeDate = ignore
+
