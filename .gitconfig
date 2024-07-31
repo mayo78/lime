@@ -6,3 +6,7 @@
 	missingSpaceBeforeDate = ignore
 [transfer]
 	fsckObjects = false
+[fetch]
+	fsckObjects = false
+[receive]
+	fsckObjects = false
