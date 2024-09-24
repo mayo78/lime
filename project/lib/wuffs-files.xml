@@ -7,9 +7,9 @@
 		<compilerflag value="-DWUFFS_CONFIG__MODULE__ZLIB"/>
 		<compilerflag value="-DWUFFS_CONFIG__MODULE__PNG"/>
 		<compilerflag value="-DWUFFS_CONFIG__MODULE__DEFLATE"/>
-		<section if="HXCPP_ARMV7 || HXCPP_ARMV7S || HXCPP_ARM64">
-			<compilerflag value="-DWUFFS_BASE__CPU_ARCH__ARM_NEON"/>
-		</section>
+		<compilerflag value="-DWUFFS_CONFIG__MODULE__AUX__BASE"/>
+		<compilerflag value="-DWUFFS_CONFIG__MODULE__AUX__IMAGE"/>
+		<compilerflag value="-DWUFFS_CONFIG__MODULE__BASE"/>
 
 		<file name="${NATIVE_TOOLKIT_PATH}/wuffs/release/c/wuffs-v0.3.c" />
 

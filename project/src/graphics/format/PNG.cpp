@@ -173,86 +173,55 @@ namespace lime {
 
     return true;
 	}
-
 	bool PNG::Decode(Resource* resource, ImageBuffer* imageBuffer, bool decodeData) {
-    wuffs_png__decoder decoder;
-    wuffs_base__image_config ic;
-    wuffs_base__io_buffer io_buffer = {0};
-    uint8_t* pixel_buffer = nullptr;
-    uint8_t* workbuf = nullptr;
-    size_t workbuf_len = 0;
-    bool success = false;
+    class MyCallbacks : public wuffs_aux::DecodeImageCallbacks {
+    public:
+        wuffs_base__pixel_format SelectPixfmt(const wuffs_base__image_config& image_config) override {
+            return wuffs_base__make_pixel_format(WUFFS_BASE__PIXEL_FORMAT__RGBA_NONPREMUL);
+        }
+    };
 
+    MyCallbacks callbacks;
+    wuffs_aux::sync_io::MemoryInput input(resource->data->b, resource->data->length);
 
-    // Initialize the decoder
-    wuffs_base__status status = wuffs_png__decoder__initialize(&decoder, sizeof(decoder), WUFFS_VERSION, 0);
-    if (status.repr != NULL) {
+    wuffs_aux::DecodeImageResult result = wuffs_aux::DecodeImage(
+        callbacks,
+        input,
+        wuffs_aux::DecodeImageArgQuirks::DefaultValue(),
+        wuffs_aux::DecodeImageArgFlags::DefaultValue(),
+        wuffs_aux::DecodeImageArgPixelBlend::DefaultValue(),
+        wuffs_aux::DecodeImageArgBackgroundColor::DefaultValue(),
+        wuffs_aux::DecodeImageArgMaxInclDimension::DefaultValue(),
+        wuffs_aux::DecodeImageArgMaxInclMetadataLength::DefaultValue()
+    );
+
+    if (!result.error_message.empty()) {
+        printf("Failed to decode image: %s\n", result.error_message.c_str());
         return false;
-    }
-
-    // Read input data
-    if (!ReadInput(resource, &io_buffer)) {
-        return false;
-    }
-
-    // Decode the image configuration
-    status = wuffs_png__decoder__decode_image_config(&decoder, &ic, &io_buffer);
-    if (status.repr != NULL) {
-        goto cleanup;
-    }
-
-    // Set pixel format explicitly
-    wuffs_base__pixel_config__set(
-        &ic.pixcfg, WUFFS_BASE__PIXEL_FORMAT__RGBA_NONPREMUL,
-        WUFFS_BASE__PIXEL_SUBSAMPLING__NONE,
-        wuffs_base__pixel_config__width(&ic.pixcfg),
-        wuffs_base__pixel_config__height(&ic.pixcfg));
-
-    // Allocate buffers
-    if (!AllocateBuffers(&decoder, &ic, &pixel_buffer, &workbuf, &workbuf_len)) {
-        goto cleanup;
     }
 
     // Update ImageBuffer dimensions
-    imageBuffer->width = wuffs_base__pixel_config__width(&ic.pixcfg);
-    imageBuffer->height = wuffs_base__pixel_config__height(&ic.pixcfg);
+    imageBuffer->width = result.pixbuf.pixcfg.width();
+    imageBuffer->height = result.pixbuf.pixcfg.height();
 
     if (decodeData) {
-        wuffs_base__pixel_buffer pb = {0};
-        status = wuffs_base__pixel_buffer__set_from_slice(
-            &pb, &ic.pixcfg,
-            wuffs_base__make_slice_u8(pixel_buffer, imageBuffer->width * imageBuffer->height * 4));
-
-        if (status.repr != NULL) {
-            printf("Failed to set up pixel buffer: %s\n", status.repr);
-            goto cleanup;
-        }
-
-        status = wuffs_png__decoder__decode_frame(
-            &decoder, &pb, &io_buffer,
-            WUFFS_BASE__PIXEL_BLEND__SRC,
-            wuffs_base__make_slice_u8(workbuf, workbuf_len),
-            NULL);
-
-        if (status.repr != NULL) {
-            printf("Failed to decode frame: %s\n", status.repr);
-            goto cleanup;
-        }
-
-        // Resize and copy decoded data to imageBuffer
+        // Resize ImageBuffer
         imageBuffer->Resize(imageBuffer->width, imageBuffer->height, 32);
-        memcpy(imageBuffer->data->buffer->b, pixel_buffer, imageBuffer->width * imageBuffer->height * 4);
+
+        // Copy decoded data to ImageBuffer
+        wuffs_base__table_u8 pixels = result.pixbuf.plane(0);
+        size_t bytes_per_row = imageBuffer->width * 4;  // 4 bytes per pixel for RGBA
+        for (uint32_t y = 0; y < imageBuffer->height; ++y) {
+            memcpy(imageBuffer->data->buffer->b + (y * bytes_per_row),
+                   pixels.ptr + (y * pixels.stride),
+                   bytes_per_row);
+        }
+
+        // No need for color correction if the format already matches your needs
     }
 
-    success = true;
-
-		cleanup:
-				free(workbuf);
-				free(pixel_buffer);
-				free(io_buffer.data.ptr);
-
-				return success;
-		}
+    return true;
+	}
 
 	bool PNG::Encode (ImageBuffer *imageBuffer, Bytes* bytes) {
 
