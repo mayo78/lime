@@ -1,0 +1,19 @@
+<xml>
+
+	<files id="native-toolkit-wuffs-png">
+
+		<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/wuffs/release/c" />
+		<compilerflag value="-DWUFFS_CONFIG__MODULES"/>
+		<compilerflag value="-DWUFFS_CONFIG__MODULE__ZLIB"/>
+		<compilerflag value="-DWUFFS_CONFIG__MODULE__PNG"/>
+		<compilerflag value="-DWUFFS_CONFIG__MODULE__DEFLATE"/>
+		<section if="HXCPP_ARMV7 || HXCPP_ARMV7S || HXCPP_ARM64">
+			<compilerflag value="-DWUFFS_BASE__CPU_ARCH__ARM_NEON"/>
+		</section>
+
+		<file name="${NATIVE_TOOLKIT_PATH}/wuffs/release/c/wuffs-v0.3.c" />
+
+
+	</files>
+
+</xml>
