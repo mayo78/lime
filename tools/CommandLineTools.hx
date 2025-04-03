@@ -496,16 +496,14 @@ class CommandLineTools
 
 			case LINUX:
 				var arguments = Sys.args();
-				var raspberryPi = false;
 
-				for (argument in arguments)
+				if (System.hostArchitecture == ARMV7 )
 				{
-					if (argument == "-rpi") raspberryPi = true;
+					untyped $loader.path = $array(path + "LinuxArm/", $loader.path);
 				}
-
-				if (raspberryPi || System.hostArchitecture == ARMV6 || System.hostArchitecture == ARMV7)
+				else if (System.hostArchitecture == ARM64)
 				{
-					untyped $loader.path = $array(path + "RPi/", $loader.path);
+					untyped $loader.path = $array(path + "LinuxArm64/", $loader.path);
 				}
 				else if (System.hostArchitecture == X64)
 				{
@@ -954,6 +952,12 @@ class CommandLineTools
 		Log.println(" " + Log.accentColor + "Options:" + Log.resetColor);
 		Log.println("");
 
+		if (command == "setup")
+		{
+			Log.println("  \x1b[1m-cli\x1b[0;3m/\x1b[0m\x1b[1m-alias\x1b[0m -- Set up " + defaultLibraryName + " alias only, skipping haxelib installs");
+			Log.println("  \x1b[1m-noalias\x1b[0m -- Do not set up " + defaultLibraryName + " alias");
+		}
+
 		if (isBuildCommand)
 		{
 			Log.println("  \x1b[1m-D\x1b[0;3mvalue\x1b[0m -- Specify a define to use when processing other commands");
@@ -1038,7 +1042,6 @@ class CommandLineTools
 			{
 				Log.println("  \x1b[3m(html5|flash|webassembly)\x1b[0m \x1b[1m-nolaunch\x1b[0m -- Begin test server without launching");
 				// Log.println ("  \x1b[3m(html5)\x1b[0m \x1b[1m-minify\x1b[0m -- Minify output using the Google Closure compiler");
-				// Log.println ("  \x1b[3m(html5)\x1b[0m \x1b[1m-minify -yui\x1b[0m -- Minify output using the YUI compressor");
 				Log.println("  \x1b[3m(html5|flash|webassembly)\x1b[0m \x1b[1m--port=\x1b[0;3mvalue\x1b[0m -- Set port for test server");
 			}
 
@@ -1515,6 +1518,11 @@ class CommandLineTools
 			case "cpp":
 				target = System.hostPlatform;
 				targetFlags.set("cpp", "");
+
+				if (target == Platform.MAC)
+				{
+					overrides.haxedefs.set("macos", "");
+				}
 
 			case "neko":
 				target = System.hostPlatform;
@@ -2233,17 +2241,12 @@ class CommandLineTools
 				{
 					if (argument.substr(0, 4) == "-arm")
 					{
-						try
-						{
-							var name = argument.substr(1).toUpperCase();
-							var value = Type.createEnum(Architecture, name);
+						var value = new Architecture(argument.substr(1));
 
-							if (value != null)
-							{
-								overrides.architectures.push(value);
-							}
+						if (value != null)
+						{
+							overrides.architectures.push(value);
 						}
-						catch (e:Dynamic) {}
 					}
 					else if (argument == "-64" || argument == "-x86_64")
 					{
