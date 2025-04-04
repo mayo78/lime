@@ -415,6 +415,7 @@ namespace lime {
 
 					gamepadsAxisMap[event->gaxis.which][event->gaxis.axis] = event->gaxis.value;
 					gamepadEvent.axisValue = event->gaxis.value / (event->gaxis.value > 0 ? 32767.0 : 32768.0);
+					gamepadEvent.timestamp = event->gaxis.timestamp;
 
 					GamepadEvent::Dispatch (&gamepadEvent);
 					break;
@@ -424,6 +425,7 @@ namespace lime {
 					gamepadEvent.type = GAMEPAD_BUTTON_DOWN;
 					gamepadEvent.button = event->gbutton.button;
 					gamepadEvent.id = event->gbutton.which;
+					gamepadEvent.timestamp = event->gbutton.timestamp;
 
 					GamepadEvent::Dispatch (&gamepadEvent);
 					break;
@@ -433,6 +435,7 @@ namespace lime {
 					gamepadEvent.type = GAMEPAD_BUTTON_UP;
 					gamepadEvent.button = event->gbutton.button;
 					gamepadEvent.id = event->gbutton.which;
+					gamepadEvent.timestamp = event->gbutton.timestamp;
 
 					GamepadEvent::Dispatch (&gamepadEvent);
 					break;
@@ -575,6 +578,7 @@ namespace lime {
 			keyEvent.keyCode = event->key.key;
 			keyEvent.modifier = event->key.mod;
 			keyEvent.windowID = event->key.windowID;
+			keyEvent.timestamp = event->key.timestamp;
 
 			if (keyEvent.type == KEY_DOWN) {
 
