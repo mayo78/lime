@@ -701,7 +701,7 @@ class Application extends Module
 
 	@:noCompletion private function get_deviceOrientation():Orientation
 	{
-		//return __backend.getDeviceOrientation();
+		return UNKNOWN;
 	}
 }
 
