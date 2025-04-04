@@ -26,7 +26,23 @@ class HTML5AudioSource
 
 	public function dispose():Void {}
 
-	public function init():Void {}
+	public function init():Void
+	{
+		#if lime_howlerjs
+		// Initialize the panner with default values
+		parent.buffer.src.pannerAttr(
+			{
+				coneInnerAngle: 360,
+				coneOuterAngle: 360,
+				coneOuterGain: 0,
+				distanceModel: "inverse",
+				maxDistance: 10000,
+				refDistance: 1,
+				rolloffFactor: 1,
+				panningModel: "equalpower" // Default to equalpower for better performance
+			});
+		#end
+	}
 
 	public function play():Void
 	{
@@ -50,7 +66,7 @@ class HTML5AudioSource
 		untyped parent.buffer.__srcHowl._volume = cacheVolume;
 		// setGain (parent.gain);
 
-		// setPosition(parent.position);
+		// // setPosition(parent.position);
 
 		parent.buffer.__srcHowl.on("end", howl_onEnd, id);
 

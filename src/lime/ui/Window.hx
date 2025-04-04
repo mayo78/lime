@@ -61,6 +61,10 @@ class Window
 	public var onClose(default, null) = new Event<Void->Void>();
 	public var onDeactivate(default, null) = new Event<Void->Void>();
 	public var onDropFile(default, null) = new Event<String->Void>();
+	// SDL_DROPTEXT is only implemented for X11 on Linux
+	//public var onDropText(default, null) = new Event<String->Void>();
+	public var onDropStart(default, null) = new Event<Void->Void>();
+	public var onDropEnd(default, null) = new Event<Void->Void>();
 	public var onEnter(default, null) = new Event<Void->Void>();
 	public var onExpose(default, null) = new Event<Void->Void>();
 	public var onFocusIn(default, null) = new Event<Void->Void>();
@@ -98,6 +102,7 @@ class Window
 	public var textInputEnabled(get, set):Bool;
 	public var title(get, set):String;
 	public var visible(get, set):Bool;
+	public var vsync(get, set):Bool;
 	public var width(get, set):Int;
 	public var x(get, set):Int;
 	public var y(get, set):Int;
@@ -119,6 +124,7 @@ class Window
 	@:noCompletion private var __scale:Float;
 	@:noCompletion private var __title:String;
 	@:noCompletion private var __visible:Bool;
+	@:noCompletion private var __vsync:Bool;
 	@:noCompletion private var __width:Int;
 	@:noCompletion private var __x:Int;
 	@:noCompletion private var __y:Int;
@@ -170,6 +176,7 @@ class Window
 		__height = 0;
 		__fullscreen = false;
 		__scale = 1;
+		__vsync = ((__attributes.context != null && Reflect.hasField(__attributes.context, "vsync")) ? __attributes.context.vsync : false);
 		__x = 0;
 		__y = 0;
 		__title = Reflect.hasField(__attributes, "title") ? __attributes.title : "";
@@ -687,6 +694,16 @@ class Window
 	{
 		__visible = __backend.setVisible(value);
 		return __visible;
+	}
+
+	@:noCompletion private inline function get_vsync():Bool
+	{
+		return __vsync;
+	}
+
+	@:noCompletion private inline function set_vsync(value:Bool):Bool
+	{
+		return __vsync = __backend.setVSync(value);
 	}
 
 	@:noCompletion private inline function get_width():Int

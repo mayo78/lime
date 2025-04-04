@@ -233,6 +233,8 @@ class NativeCFFI
 
 	@:cffi private static function lime_neko_execute(module:String):Void;
 
+	@:cffi private static function lime_orientation_event_manager_register(callback:Dynamic, eventObject:Dynamic):Void;
+
 	@:cffi private static function lime_png_decode_bytes(data:Dynamic, decodeData:Bool, buffer:Dynamic):Dynamic;
 
 	@:cffi private static function lime_png_decode_file(path:String, decodeData:Bool, buffer:Dynamic):Dynamic;
@@ -258,6 +260,8 @@ class NativeCFFI
 	@:cffi private static function lime_system_get_ios_tablet():Bool;
 
 	@:cffi private static function lime_system_get_num_displays():Int;
+
+	@:cffi private static function lime_system_get_device_orientation():Int;
 
 	@:cffi private static function lime_system_get_platform_label():Dynamic;
 
@@ -354,6 +358,8 @@ class NativeCFFI
 	@:cffi private static function lime_window_set_title(handle:Dynamic, title:String):Dynamic;
 
 	@:cffi private static function lime_window_set_visible(handle:Dynamic, visible:Bool):Bool;
+
+	@:cffi private static function lime_window_set_vsync(handle:Dynamic, vsync:Bool):Bool;
 
 	@:cffi private static function lime_window_warp_mouse(handle:Dynamic, x:Int, y:Int):Void;
 
@@ -514,6 +520,8 @@ class NativeCFFI
 	private static var lime_mouse_event_manager_register = new cpp.Callable<cpp.Object->cpp.Object->cpp.Void>(cpp.Prime._loadPrime("lime",
 		"lime_mouse_event_manager_register", "oov", false));
 	private static var lime_neko_execute = new cpp.Callable<String->cpp.Void>(cpp.Prime._loadPrime("lime", "lime_neko_execute", "sv", false));
+	private static var lime_orientation_event_manager_register = new cpp.Callable<cpp.Object->cpp.Object->cpp.Void>(cpp.Prime._loadPrime("lime",
+		"lime_orientation_event_manager_register", "oov", false));
 	private static var lime_png_decode_bytes = new cpp.Callable<cpp.Object->Bool->cpp.Object->cpp.Object>(cpp.Prime._loadPrime("lime",
 		"lime_png_decode_bytes", "oboo", false));
 	private static var lime_png_decode_file = new cpp.Callable<String->Bool->cpp.Object->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_png_decode_file",
@@ -536,6 +544,7 @@ class NativeCFFI
 	private static var lime_system_get_display = new cpp.Callable<Int->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_system_get_display", "io", false));
 	private static var lime_system_get_ios_tablet = new cpp.Callable<Void->Bool>(cpp.Prime._loadPrime("lime", "lime_system_get_ios_tablet", "b", false));
 	private static var lime_system_get_num_displays = new cpp.Callable<Void->Int>(cpp.Prime._loadPrime("lime", "lime_system_get_num_displays", "i", false));
+	private static var lime_system_get_device_orientation = new cpp.Callable<Void->Int>(cpp.Prime._loadPrime("lime", "lime_system_get_device_orientation", "i", false));
 	private static var lime_system_get_platform_label = new cpp.Callable<Void->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_system_get_platform_label", "o",
 		false));
 	private static var lime_system_get_platform_name = new cpp.Callable<Void->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_system_get_platform_name", "o",
@@ -616,6 +625,8 @@ class NativeCFFI
 	private static var lime_window_set_title = new cpp.Callable<cpp.Object->String->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_window_set_title", "oso",
 		false));
 	private static var lime_window_set_visible = new cpp.Callable<cpp.Object->Bool->Bool>(cpp.Prime._loadPrime("lime", "lime_window_set_visible", "obb",
+		false));
+	private static var lime_window_set_vsync = new cpp.Callable<cpp.Object->Bool->Bool>(cpp.Prime._loadPrime("lime", "lime_window_set_vsync", "obb",
 		false));
 	private static var lime_window_warp_mouse = new cpp.Callable<cpp.Object->Int->Int->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_window_warp_mouse",
 		"oiiv", false));
@@ -715,6 +726,7 @@ class NativeCFFI
 	private static var lime_lzma_decompress = CFFI.load("lime", "lime_lzma_decompress", 2);
 	private static var lime_mouse_event_manager_register = CFFI.load("lime", "lime_mouse_event_manager_register", 2);
 	private static var lime_neko_execute = CFFI.load("lime", "lime_neko_execute", 1);
+	private static var lime_orientation_event_manager_register = CFFI.load("lime", "lime_orientation_event_manager_register", 2);
 	private static var lime_png_decode_bytes = CFFI.load("lime", "lime_png_decode_bytes", 3);
 	private static var lime_png_decode_file = CFFI.load("lime", "lime_png_decode_file", 3);
 	private static var lime_render_event_manager_register = CFFI.load("lime", "lime_render_event_manager_register", 2);
@@ -728,6 +740,7 @@ class NativeCFFI
 	private static var lime_system_get_display = CFFI.load("lime", "lime_system_get_display", 1);
 	private static var lime_system_get_ios_tablet = CFFI.load("lime", "lime_system_get_ios_tablet", 0);
 	private static var lime_system_get_num_displays = CFFI.load("lime", "lime_system_get_num_displays", 0);
+	private static var lime_system_get_device_orientation = CFFI.load("lime", "lime_system_get_device_orientation", 0);
 	private static var lime_system_get_platform_label = CFFI.load("lime", "lime_system_get_platform_label", 0);
 	private static var lime_system_get_platform_name = CFFI.load("lime", "lime_system_get_platform_name", 0);
 	private static var lime_system_get_platform_version = CFFI.load("lime", "lime_system_get_platform_version", 0);
@@ -776,6 +789,7 @@ class NativeCFFI
 	private static var lime_window_set_text_input_rect = CFFI.load("lime", "lime_window_set_text_input_rect", 2);
 	private static var lime_window_set_title = CFFI.load("lime", "lime_window_set_title", 2);
 	private static var lime_window_set_visible = CFFI.load("lime", "lime_window_set_visible", 2);
+	private static var lime_window_set_vsync = CFFI.load("lime", "lime_window_set_vsync", 2);
 	private static var lime_window_warp_mouse = CFFI.load("lime", "lime_window_warp_mouse", 3);
 	private static var lime_window_event_manager_register = CFFI.load("lime", "lime_window_event_manager_register", 2);
 	private static var lime_zlib_compress = CFFI.load("lime", "lime_zlib_compress", 2);
@@ -1152,6 +1166,10 @@ class NativeCFFI
 		eventObject:MouseEventInfo):Void {}
 
 	// @:cffi private static function lime_neko_execute (module:String):Void;
+
+	@:hlNative("lime", "hl_orientation_event_manager_register") private static function lime_orientation_event_manager_register(callback:Void->Void,
+		eventObject:OrientationEventInfo):Void {}
+
 	@:hlNative("lime", "hl_png_decode_bytes") private static function lime_png_decode_bytes(data:Bytes, decodeData:Bool, buffer:ImageBuffer):ImageBuffer
 	{
 		return null;
@@ -1209,6 +1227,11 @@ class NativeCFFI
 	}
 
 	@:hlNative("lime", "hl_system_get_num_displays") private static function lime_system_get_num_displays():Int
+	{
+		return 0;
+	}
+
+	@:hlNative("lime", "hl_system_get_device_orientation") private static function lime_system_get_device_orientation():Int
 	{
 		return 0;
 	}
@@ -1383,6 +1406,11 @@ class NativeCFFI
 	}
 
 	@:hlNative("lime", "hl_window_set_visible") private static function lime_window_set_visible(handle:CFFIPointer, visible:Bool):Bool
+	{
+		return false;
+	}
+
+	@:hlNative("lime", "hl_window_set_vsync") private static function lime_window_set_vsync(handle:CFFIPointer, vsync:Bool):Bool
 	{
 		return false;
 	}

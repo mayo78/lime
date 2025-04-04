@@ -781,7 +781,7 @@ class NativeApplication
 	// TODO: This should probably be an Int64
 	public var timestamp:Int = 0;
 
-	public function new(type:KeyEventType = null, windowID:Int = 0, keyCode: Float = 0, modifier:Int = 0, timestamp:Int = 0)
+	public function new(type:KeyEventType = null, windowID:Int = 0, keyCode:Float = 0, modifier:Int = 0, timestamp:Int = 0)
 	{
 		this.type = type;
 		this.windowID = windowID;

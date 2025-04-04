@@ -683,7 +683,7 @@ class ProjectXMLParser extends HXProject
 		{
 			switch (attribute)
 			{
-				case "title", "description", "package", "version", "company", "company-id", "build-number", "company-url":
+				case "title", "description", "package", "version", "company", "company-id", "build-number", "company-url", "copyright-years":
 					var value = substitute(element.att.resolve(attribute));
 
 					defines.set("APP_" + StringTools.replace(attribute, "-", "_").toUpperCase(), value);
@@ -1166,21 +1166,21 @@ class ProjectXMLParser extends HXProject
 				case "architecture":
 					if (element.has.name)
 					{
-						var name = substitute(element.att.name);
+						var name = new Architecture(substitute(element.att.name));
 
-						if (Reflect.hasField(Architecture, name.toUpperCase()))
+						if (name != null)
 						{
-							ArrayTools.addUnique(architectures, Reflect.field(Architecture, name.toUpperCase()));
+							ArrayTools.addUnique(architectures, name);
 						}
 					}
 
 					if (element.has.exclude)
 					{
-						var exclude = substitute(element.att.exclude);
+						var exclude = new Architecture(substitute(element.att.exclude));
 
-						if (Reflect.hasField(Architecture, exclude.toUpperCase()))
+						if (exclude != null)
 						{
-							ArrayTools.addUnique(excludeArchitectures, Reflect.field(Architecture, exclude.toUpperCase()));
+							ArrayTools.addUnique(excludeArchitectures, exclude);
 						}
 					}
 
@@ -1738,6 +1738,9 @@ class ProjectXMLParser extends HXProject
 
 							case "gradle-version":
 								config.set("android.gradle-version", value);
+
+							case "gradle-plugin":
+								config.set("android.gradle-plugin", value);
 
 							default:
 								name = formatAttributeName(attribute);
