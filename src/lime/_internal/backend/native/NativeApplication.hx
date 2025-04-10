@@ -710,14 +710,14 @@ class NativeApplication
 
 	public var timestamp:haxe.Int64 = 0;
 
-	public function new(type:GamepadEventType = null, id:Int = 0, button:Int = 0, axis:Int = 0, value:Float = 0, timestamp:haxe.Int64 = 0)
+	public function new(type:GamepadEventType = null, id:Int = 0, button:Int = 0, axis:Int = 0, value:Float = 0, timestamp:Null<haxe.Int64>)
 	{
 		this.type = type;
 		this.id = id;
 		this.button = button;
 		this.axis = axis;
 		this.axisValue = value;
-		this.timestamp = timestamp ?? haxe.Int64.ofInt(0);
+		this.timestamp = timestamp ?? haxe.Int64.ofInt(-1);
 	}
 
 	public function clone():GamepadEventInfo
@@ -780,13 +780,13 @@ class NativeApplication
 	// TODO: This should probably be an Int64
 	public var timestamp:haxe.Int64 = 0;
 
-	public function new(type:KeyEventType = null, windowID:Int = 0, keyCode:Float = 0, modifier:Int = 0, timestamp:haxe.Int64 = 0)
+	public function new(type:KeyEventType = null, windowID:Int = 0, keyCode:Float = 0, modifier:Int = 0, timestamp:Null<haxe.Int64>)
 	{
 		this.type = type;
 		this.windowID = windowID;
 		this.keyCode = keyCode;
 		this.modifier = modifier;
-		this.timestamp = timestamp ?? haxe.Int64.ofInt(0);
+		this.timestamp = timestamp ?? haxe.Int64.ofInt(-1);
 	}
 
 	public function clone():KeyEventInfo
