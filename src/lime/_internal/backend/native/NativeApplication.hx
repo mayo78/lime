@@ -50,6 +50,7 @@ class NativeApplication
 	private var gamepadEventInfo = new GamepadEventInfo();
 	private var joystickEventInfo = new JoystickEventInfo();
 	private var keyEventInfo = new KeyEventInfo();
+	private var niceKeyEventInfo = new NiceKeyEventInfo();	
 	private var mouseEventInfo = new MouseEventInfo();
 	private var renderEventInfo = new RenderEventInfo(RENDER);
 	private var sensorEventInfo = new SensorEventInfo();
@@ -259,11 +260,13 @@ class NativeApplication
 
 		if (window != null)
 		{
-			var type:KeyEventType = keyEventInfo.type;
-			var int32:Float = keyEventInfo.keyCode;
-			var keyCode:KeyCode = Std.int(int32);
-			var modifier:KeyModifier = keyEventInfo.modifier;
-			var timestamp:haxe.Int64 = keyEventInfo.timestamp;
+			final type = niceKeyEventInfo.type = keyEventInfo.type;
+			final int32 = keyEventInfo.keyCode;
+			final keyCode = niceKeyEventInfo.keyCode = Std.int(int32);
+			final modifier = niceKeyEventInfo.modifier = keyEventInfo.modifier;
+			final timestamp = niceKeyEventInfo.timestamp = keyEventInfo.timestamp;
+			final repeat = niceKeyEventInfo.repeat = keyEventInfo.repeat;
+			window.onKeyEvent.dispatch(niceKeyEventInfo);
 
 			switch (type)
 			{
@@ -776,11 +779,12 @@ class NativeApplication
 	public var modifier:Int;
 	public var type:KeyEventType;
 	public var windowID:Int;
+	public var repeat:Bool;
 
 	// TODO: This should probably be an Int64
 	public var timestamp:haxe.Int64 = 0;
 
-	public function new(type:KeyEventType = null, windowID:Int = 0, keyCode:Float = 0, modifier:Int = 0, timestamp:Null<haxe.Int64> = null)
+	public function new(type:KeyEventType = null, windowID:Int = 0, keyCode:Float = 0, modifier:Int = 0, timestamp:Null<haxe.Int64> = null, repeat:Bool = false)
 	{
 		this.type = type;
 		this.windowID = windowID;
@@ -791,8 +795,19 @@ class NativeApplication
 
 	public function clone():KeyEventInfo
 	{
-		return new KeyEventInfo(type, windowID, keyCode, modifier, timestamp);
+		return new KeyEventInfo(type, windowID, keyCode, modifier, timestamp, repeat);
 	}
+}
+
+class NiceKeyEventInfo
+{
+	public var type:KeyEventType;
+	public var keyCode:KeyCode;
+	public var modifier:KeyModifier;
+	public var timestamp:haxe.Int64;
+	public var repeat:Bool;
+
+	public function new() {}
 }
 
 #if (haxe_ver >= 4.0) private enum #else @:enum private #end abstract KeyEventType(Int)
