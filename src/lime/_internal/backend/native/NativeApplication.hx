@@ -23,6 +23,7 @@ import lime.ui.KeyCode;
 import lime.ui.KeyModifier;
 import lime.ui.Touch;
 import lime.ui.Window;
+import lime.ui.NiceKeyEventInfo;
 
 #if !lime_debug
 @:fileXml('tags="haxe,release"')
@@ -799,18 +800,7 @@ class NativeApplication
 	}
 }
 
-class NiceKeyEventInfo
-{
-	public var type:KeyEventType;
-	public var keyCode:KeyCode;
-	public var modifier:KeyModifier;
-	public var timestamp:haxe.Int64;
-	public var repeat:Bool;
-
-	public function new() {}
-}
-
-#if (haxe_ver >= 4.0) private enum #else @:enum private #end abstract KeyEventType(Int)
+#if (haxe_ver >= 4.0) enum #else @:enum #end abstract KeyEventType(Int)
 {
 	var KEY_DOWN = 0;
 	var KEY_UP = 1;
