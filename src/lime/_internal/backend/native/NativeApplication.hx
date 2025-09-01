@@ -51,7 +51,7 @@ class NativeApplication
 	private var gamepadEventInfo = new GamepadEventInfo();
 	private var joystickEventInfo = new JoystickEventInfo();
 	private var keyEventInfo = new KeyEventInfo();
-	private var niceKeyEventInfo = new NiceKeyEventInfo();	
+	private var niceKeyEventInfo = new NiceKeyEventInfo();
 	private var mouseEventInfo = new MouseEventInfo();
 	private var renderEventInfo = new RenderEventInfo(RENDER);
 	private var sensorEventInfo = new SensorEventInfo();
@@ -111,7 +111,7 @@ class NativeApplication
 		#if lime_cffi
 		NativeCFFI.lime_application_event_manager_register(handleApplicationEvent, applicationEventInfo);
 		NativeCFFI.lime_clipboard_event_manager_register(handleClipboardEvent, clipboardEventInfo);
-		NativeCFFI.lime_drop_event_manager_register(handleDropEvent, dropEventInfo);
+		//NativeCFFI.lime_drop_event_manager_register(handleDropEvent, dropEventInfo);
 		NativeCFFI.lime_gamepad_event_manager_register(handleGamepadEvent, gamepadEventInfo);
 		NativeCFFI.lime_joystick_event_manager_register(handleJoystickEvent, joystickEventInfo);
 		NativeCFFI.lime_key_event_manager_register(handleKeyEvent, keyEventInfo);
