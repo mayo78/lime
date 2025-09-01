@@ -13,7 +13,7 @@ namespace lime {
 	static int id_id;
 	static int id_type;
 	static int id_value;
-	static int id_timestamp;
+	static uint64_t id_timestamp;
 	static bool init = false;
 
 
@@ -54,7 +54,7 @@ namespace lime {
 				alloc_field (object, id_id, alloc_int (event->id));
 				alloc_field (object, id_type, alloc_int (event->type));
 				alloc_field (object, id_value, alloc_float (event->axisValue));
-				alloc_field (object, id_timestamp, alloc_int (event->timestamp));
+				alloc_field (object, id_timestamp, alloc_float (event->timestamp));
 
 			} else {
 

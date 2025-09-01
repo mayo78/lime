@@ -66,7 +66,7 @@ class HTML5AudioSource
 		untyped parent.buffer.__srcHowl._volume = cacheVolume;
 		// setGain (parent.gain);
 
-		// setPosition(parent.position);
+		// // setPosition(parent.position);
 
 		parent.buffer.__srcHowl.on("end", howl_onEnd, id);
 
@@ -237,6 +237,7 @@ class HTML5AudioSource
 
 		return getPitch();
 	}
+
 
 	public function getPosition():Vector4
 	{

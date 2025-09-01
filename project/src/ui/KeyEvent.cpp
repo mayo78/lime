@@ -13,6 +13,7 @@ namespace lime {
 	static int id_type;
 	static int id_windowID;
 	static int id_timestamp;
+	static int id_repeat;
 	static bool init = false;
 
 
@@ -40,6 +41,7 @@ namespace lime {
 					id_type = val_id ("type");
 					id_windowID = val_id ("windowID");
 					id_timestamp = val_id ("timestamp");
+					id_repeat = val_id ("repeat");
 					init = true;
 
 				}
@@ -50,7 +52,8 @@ namespace lime {
 				alloc_field (object, id_modifier, alloc_int (event->modifier));
 				alloc_field (object, id_type, alloc_int (event->type));
 				alloc_field (object, id_windowID, alloc_int (event->windowID));
-				alloc_field (object, id_timestamp, alloc_int (event->timestamp));
+				alloc_field (object, id_timestamp, alloc_float (event->timestamp));
+				alloc_field (object, id_repeat, alloc_bool (event->repeat));
 
 			} else {
 
@@ -60,6 +63,7 @@ namespace lime {
 				eventObject->modifier = event->modifier;
 				eventObject->type = event->type;
 				eventObject->windowID = event->windowID;
+				eventObject->repeat = event->repeat;
 
 			}
 
