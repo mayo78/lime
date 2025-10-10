@@ -2,7 +2,7 @@ name: CI
 on: [push, pull_request]
 
 env:
-  HAXE_VERSION: 4.2.5
+  HAXE_VERSION: 4.3.6
 
 jobs:
 

@@ -219,7 +219,6 @@ namespace lime {
 	    mutex.Unlock();
 	}
 
-
 	void Bytes::Set (const QuickVec<unsigned char> data) {
 
 		int size = data.size ();

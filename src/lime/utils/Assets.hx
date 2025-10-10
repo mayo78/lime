@@ -506,7 +506,7 @@ class Assets
 		return cast loadAsset(id, TEXT, false);
 	}
 
-	public static function registerLibrary(name:String, library:AssetLibrary):Void
+	public static function registerLibrary(name:String, library:AssetLibrary, unload:Bool = true):Void
 	{
 		if (name == null || name == "")
 		{
@@ -521,7 +521,7 @@ class Assets
 			}
 			else
 			{
-				unloadLibrary(name);
+				if (unload) unloadLibrary(name);
 			}
 		}
 

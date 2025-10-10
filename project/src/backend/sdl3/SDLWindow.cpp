@@ -53,6 +53,8 @@ namespace lime {
 		if (flags & WINDOW_FLAG_MINIMIZED) sdlWindowFlags |= SDL_WINDOW_MINIMIZED;
 		if (flags & WINDOW_FLAG_MAXIMIZED) sdlWindowFlags |= SDL_WINDOW_MAXIMIZED;
 
+		sdlWindowFlags |= SDL_WINDOW_TRANSPARENT;
+
 		#ifndef EMSCRIPTEN
 		if (flags & WINDOW_FLAG_ALWAYS_ON_TOP) sdlWindowFlags |= SDL_WINDOW_ALWAYS_ON_TOP;
 		#endif
@@ -1067,6 +1069,14 @@ namespace lime {
 
 	}
 
+
+	bool SDLWindow::SetVSync (bool vsync) {
+
+		SDL_GL_SetSwapInterval(vsync ? 1 : 0);
+
+		return vsync;
+
+	}
 
 	void SDLWindow::WarpMouse (int x, int y) {
 

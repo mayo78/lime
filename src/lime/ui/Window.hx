@@ -8,6 +8,7 @@ import lime.graphics.RenderContextAttributes;
 import lime.math.Rectangle;
 import lime.system.Display;
 import lime.system.DisplayMode;
+import lime.ui.NiceKeyEventInfo;
 #if (js && html5)
 import js.html.Element;
 #end
@@ -82,6 +83,9 @@ class Window
 	**/
 	public var onKeyUp(default, null) = new Event<KeyCode->KeyModifier->Void>();
 
+	public var onKeyDownPrecise(default, null) = new Event<KeyCode->KeyModifier->haxe.Int64->Void>();
+	public var onKeyUpPrecise(default, null) = new Event<KeyCode->KeyModifier->haxe.Int64->Void>();
+	public var onKeyEvent(default, null) = new Event<NiceKeyEventInfo->Void>();
 	public var onLeave(default, null) = new Event<Void->Void>();
 
 	/**
@@ -143,6 +147,7 @@ class Window
 	public var textInputEnabled(get, set):Bool;
 	public var title(get, set):String;
 	public var visible(get, set):Bool;
+	public var vsync(get, set):Bool;
 	public var width(get, set):Int;
 	public var x(get, set):Int;
 	public var y(get, set):Int;
@@ -164,6 +169,7 @@ class Window
 	@:noCompletion private var __scale:Float;
 	@:noCompletion private var __title:String;
 	@:noCompletion private var __visible:Bool;
+	@:noCompletion private var __vsync:Bool;
 	@:noCompletion private var __width:Int;
 	@:noCompletion private var __x:Int;
 	@:noCompletion private var __y:Int;
@@ -215,6 +221,7 @@ class Window
 		__height = 0;
 		__fullscreen = false;
 		__scale = 1;
+		__vsync = ((__attributes.context != null && Reflect.hasField(__attributes.context, "vsync")) ? __attributes.context.vsync : false);
 		__x = 0;
 		__y = 0;
 		__title = Reflect.hasField(__attributes, "title") ? __attributes.title : "";
@@ -738,6 +745,16 @@ class Window
 	{
 		__visible = __backend.setVisible(value);
 		return __visible;
+	}
+
+	@:noCompletion private inline function get_vsync():Bool
+	{
+		return __vsync;
+	}
+
+	@:noCompletion private inline function set_vsync(value:Bool):Bool
+	{
+		return __vsync = __backend.setVSync(value);
 	}
 
 	@:noCompletion private inline function get_width():Int
