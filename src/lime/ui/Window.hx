@@ -756,16 +756,6 @@ class Window
 		return __vsync = __backend.setVSync(value);
 	}
 
-	@:noCompletion private inline function get_vsync():Bool
-	{
-		return __vsync;
-	}
-
-	@:noCompletion private inline function set_vsync(value:Bool):Bool
-	{
-		return __vsync = __backend.setVSync(value);
-	}
-
 	@:noCompletion private inline function get_width():Int
 	{
 		return __width;
