@@ -168,7 +168,6 @@ class Window
 	@:noCompletion private var __resizable:Bool;
 	@:noCompletion private var __scale:Float;
 	@:noCompletion private var __title:String;
-	@:noCompletion private var __visible:Bool;
 	@:noCompletion private var __vsync:Bool;
 	@:noCompletion private var __width:Int;
 	@:noCompletion private var __x:Int;
@@ -225,7 +224,7 @@ class Window
 		__x = 0;
 		__y = 0;
 		__title = Reflect.hasField(__attributes, "title") ? __attributes.title : "";
-		__visible = true;
+		__hidden = false;
 		__borderless = Reflect.hasField(__attributes, "borderless") ? __attributes.borderless : false;
 		__resizable = Reflect.hasField(__attributes, "resizable") ? __attributes.resizable : false;
 		__maximized = Reflect.hasField(__attributes, "maximized") ? __attributes.maximized : false;
@@ -738,13 +737,23 @@ class Window
 
 	@:noCompletion private inline function get_visible():Bool
 	{
-		return __visible;
+		return !__hidden;
 	}
 
 	@:noCompletion private function set_visible(value:Bool):Bool
 	{
-		__visible = __backend.setVisible(value);
-		return __visible;
+		__hidden = !__backend.setVisible(value);
+		return !__hidden;
+	}
+
+	@:noCompletion private inline function get_vsync():Bool
+	{
+		return __vsync;
+	}
+
+	@:noCompletion private inline function set_vsync(value:Bool):Bool
+	{
+		return __vsync = __backend.setVSync(value);
 	}
 
 	@:noCompletion private inline function get_vsync():Bool
