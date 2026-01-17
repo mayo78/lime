@@ -44,6 +44,7 @@ import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -1673,12 +1674,19 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
         // create text
 
+        ScrollView messageScroll = new ScrollView(this);
         TextView message = new TextView(this);
-        message.setGravity(Gravity.CENTER);
+        message.setGravity(Gravity.START);
         message.setText(args.getString("message"));
         if (textColor != Color.TRANSPARENT) {
             message.setTextColor(textColor);
         }
+
+        // add TextView to ScrollView
+        messageScroll.addView(message);
+        LinearLayout.LayoutParams scrollParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f);
+        messageScroll.setLayoutParams(scrollParams);
 
         // create buttons
 
@@ -1737,7 +1745,10 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.addView(message);
+        content.setLayoutParams(new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        content.addView(messageScroll);
+        // content.addView(message);
         content.addView(buttons);
         if (backgroundColor != Color.TRANSPARENT) {
             content.setBackgroundColor(backgroundColor);

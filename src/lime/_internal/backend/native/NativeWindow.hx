@@ -1,5 +1,6 @@
 package lime._internal.backend.native;
 
+import lime.ui.WindowVSyncMode;
 import haxe.io.Bytes;
 import lime._internal.backend.native.NativeCFFI;
 import lime.app.Application;
@@ -246,6 +247,18 @@ class NativeWindow
 		}
 	}
 
+	public function setVSyncMode(mode:WindowVSyncMode):Bool
+	{
+		if (handle != null)
+		{
+			#if (!macro && lime_cffi)
+			return NativeCFFI.lime_window_set_vsync_mode(handle, mode);
+			#end
+		}
+
+		return false;
+	}
+
 	public function getCursor():MouseCursor
 	{
 		return cursor;
@@ -262,6 +275,18 @@ class NativeWindow
 			{
 				return System.getDisplay(index);
 			}
+			#end
+		}
+
+		return null;
+	}
+
+	public function getNativeHandle():Dynamic
+	{
+		if (handle != null)
+		{
+			#if (!macro && lime_cffi)
+			return NativeCFFI.lime_window_get_handle(handle);
 			#end
 		}
 

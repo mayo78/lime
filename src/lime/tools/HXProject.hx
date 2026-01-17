@@ -38,6 +38,7 @@ class HXProject extends Script
 	public var haxelibs:Array<Haxelib>;
 	public var host(get, null):Platform;
 	public var icons:Array<Icon>;
+	public var adaptiveIcon:AdaptiveIcon;
 	public var javaPaths:Array<String>;
 	public var keystore:Keystore;
 	public var languages:Array<String>;
@@ -269,6 +270,11 @@ class HXProject extends Script
 		for (icon in icons)
 		{
 			project.icons.push(icon.clone());
+		}
+
+		if (adaptiveIcon != null)
+		{
+			project.adaptiveIcon = adaptiveIcon.clone();
 		}
 
 		project.javaPaths = javaPaths.copy();
@@ -776,13 +782,6 @@ class HXProject extends Script
 				defines.set("cpp", "1");
 				defines.set("mingw", "1");
 			}
-			else
-			{
-				targetFlags.set("neko", "1");
-
-				defines.set("targetType", "neko");
-				defines.set("neko", "1");
-			}
 		}
 		else if (target == Platform.WEB_ASSEMBLY)
 		{
@@ -913,6 +912,11 @@ class HXProject extends Script
 			haxelibs = ArrayTools.concatUnique(haxelibs, project.haxelibs, true, "name");
 			icons = ArrayTools.concatUnique(icons, project.icons);
 			javaPaths = ArrayTools.concatUnique(javaPaths, project.javaPaths, true);
+
+			if (project.adaptiveIcon != null)
+			{
+				adaptiveIcon = project.adaptiveIcon;
+			}
 
 			if (keystore == null)
 			{

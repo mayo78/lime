@@ -9,9 +9,7 @@
         <compilerflag value="-std=c++11" if="android" />
 
         <compilerflag value="-I${NATIVE_TOOLKIT_PATH}/openal/" />
-        <compilerflag value="-I${NATIVE_TOOLKIT_PATH}/custom/openal/alc/" />
         <compilerflag value="-I${NATIVE_TOOLKIT_PATH}/openal/alc/" />
-        <compilerflag value="-I${NATIVE_TOOLKIT_PATH}/custom/openal/build/" />
         <compilerflag value="-I${NATIVE_TOOLKIT_PATH}/openal/common/" />
         <compilerflag value="-I${NATIVE_TOOLKIT_PATH}/custom/openal/include/" />
         <compilerflag value="-I${NATIVE_TOOLKIT_PATH}/openal/include/" />
@@ -100,7 +98,6 @@
         <file name="${NATIVE_TOOLKIT_PATH}/openal/core/mixer/mixer_sse41.cpp" unless="rpi || android || HXCPP_ARM64" />
         <file name="${NATIVE_TOOLKIT_PATH}/openal/alc/panning.cpp" />
         <file name="${NATIVE_TOOLKIT_PATH}/openal/common/ringbuffer.cpp" />
-        <file name="${NATIVE_TOOLKIT_PATH}/openal/common/filesystem.cpp" />
         <file name="${NATIVE_TOOLKIT_PATH}/openal/core/uhjfilter.cpp" />
         <file name="${NATIVE_TOOLKIT_PATH}/openal/core/voice.cpp" />
         <file name="${NATIVE_TOOLKIT_PATH}/openal/common/alcomplex.cpp" />
@@ -115,6 +112,7 @@
         <file name="${NATIVE_TOOLKIT_PATH}/openal/common/althrd_setname.cpp" />
         <file name="${NATIVE_TOOLKIT_PATH}/openal/common/alassert.cpp" />
         <file name="${NATIVE_TOOLKIT_PATH}/openal/common/pffft.cpp" />
+        <file name="${NATIVE_TOOLKIT_PATH}/openal/common/filesystem.cpp" />
         <file name="${NATIVE_TOOLKIT_PATH}/openal/core/cubic_tables.cpp" />
         <file name="${NATIVE_TOOLKIT_PATH}/openal/core/storage_formats.cpp" />
         <file name="${NATIVE_TOOLKIT_PATH}/openal/alc/events.cpp" />
@@ -132,7 +130,6 @@
             <compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl/include/configs/rpi/" if="rpi" />
             <compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl/include/configs/windows/" if="windows" />
 
-            <compilerflag value="-DHAVE_SDL2=1" />
             <file name="${NATIVE_TOOLKIT_PATH}/openal/alc/backends/sdl2.cpp" />
 
         </section>
@@ -164,8 +161,12 @@
             <compilerflag value="-msse2" unless="HXCPP_ARM64" />
             <compilerflag value="-msse3" unless="HXCPP_ARM64" />
             <compilerflag value="-mssse3" unless="HXCPP_ARM64" />
-            <compilerflag value="-std=c11" />
-            <compilerflag value="-DFORCE_ALIGN=" />
+
+        </section>
+
+        <section if="ios">
+
+            <file name="${NATIVE_TOOLKIT_PATH}/openal/alc/backends/coreaudio.cpp" />
 
         </section>
 
@@ -185,11 +186,10 @@
             <compilerflag value="-D_CRT_SECURE_NO_WARNINGS" />
             <compilerflag value="-D_CRT_NONSTDC_NO_DEPRECATE" />
             <compilerflag value="/wd4098" />
-            <compilerflag value="/EHsc" />
+			<compilerflag value="/wd4293" />
             <compilerflag value="-Dstrcasecmp=_stricmp" />
             <compilerflag value="-Dstrncasecmp=_strnicmp" />
-            <compilerflag value="/permissive-" />
-            <compilerflag value="/utf-8" />
+			<compilerflag value="/utf-8" />
 
         </section>
 

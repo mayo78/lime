@@ -1764,7 +1764,6 @@ namespace lime {
 
 	}
 
-
 	void lime_gamepad_rumble (int id, double lowFrequencyRumble, double highFrequencyRumble, int duration) {
 
 		Gamepad::Rumble (id, lowFrequencyRumble, highFrequencyRumble, duration);
@@ -1835,19 +1834,19 @@ namespace lime {
 	}
 
 
-	void lime_haptic_vibrate (int period, int duration) {
+	void lime_haptic_vibrate (int period, int duration, double amplitude) {
 
 		#ifdef IPHONE
-		Haptic::Vibrate (period, duration);
+		Haptic::Vibrate (period, duration, amplitude);
 		#endif
 
 	}
 
 
-	HL_PRIM void HL_NAME(hl_haptic_vibrate) (int period, int duration) {
+	HL_PRIM void HL_NAME(hl_haptic_vibrate) (int period, int duration, double amplitude) {
 
 		#ifdef IPHONE
-		Haptic::Vibrate (period, duration);
+		Haptic::Vibrate (period, duration, amplitude);
 		#endif
 
 	}
@@ -2987,6 +2986,50 @@ namespace lime {
 	}
 
 
+	int lime_system_get_first_gyroscope_sensor_id () {
+
+		#if defined(ANDROID) || defined (IPHONE)
+		return System::GetFirstGyroscopeSensorId ();
+		#else
+		return -1;
+		#endif
+
+	}
+
+
+	HL_PRIM int HL_NAME(hl_system_get_first_gyroscope_sensor_id) () {
+
+		#if defined(ANDROID) || defined (IPHONE)
+		return System::GetFirstGyroscopeSensorId ();
+		#else
+		return -1;
+		#endif
+
+	}
+
+
+	int lime_system_get_first_accelerometer_sensor_id() {
+
+		#if defined(ANDROID) || defined (IPHONE)
+		return System::GetFirstAccelerometerSensorId ();
+		#else
+		return -1;
+		#endif
+
+	}
+
+
+	HL_PRIM int HL_NAME(hl_system_get_first_accelerometer_sensor_id) () {
+
+		#if defined(ANDROID) || defined (IPHONE)
+		return System::GetFirstAccelerometerSensorId ();
+		#else
+		return -1;
+		#endif
+
+	}
+
+
 	value lime_system_get_platform_label () {
 
 		std::wstring* label = System::GetPlatformLabel ();
@@ -3144,36 +3187,28 @@ namespace lime {
 
 	void lime_system_open_file (HxString path) {
 
-		#ifdef IPHONE
 		System::OpenFile (path.c_str ());
-		#endif
 
 	}
 
 
 	HL_PRIM void HL_NAME(hl_system_open_file) (vbyte* path) {
 
-		#ifdef IPHONE
 		System::OpenFile ((char*)path);
-		#endif
 
 	}
 
 
 	void lime_system_open_url (HxString url, HxString target) {
 
-		#ifdef IPHONE
 		System::OpenURL (url.c_str (), target.c_str ());
-		#endif
 
 	}
 
 
 	HL_PRIM void HL_NAME(hl_system_open_url) (vbyte* url, vbyte* target) {
 
-		#ifdef IPHONE
 		System::OpenURL ((char*)url, (char*)target);
-		#endif
 
 	}
 
@@ -3188,6 +3223,56 @@ namespace lime {
 	HL_PRIM bool HL_NAME(hl_system_set_allow_screen_timeout) (bool allow) {
 
 		return System::SetAllowScreenTimeout (allow);
+
+	}
+
+	int lime_system_get_display_orientation (int displayIndex) {
+
+		return System::GetDisplayOrientation (displayIndex);
+
+	}
+
+
+	HL_PRIM bool HL_NAME(hl_system_get_display_orientation) (int displayIndex) {
+
+		return System::GetDisplayOrientation (displayIndex);
+
+	}
+
+	value lime_system_get_hint (HxString hintKey) {
+
+		std::wstring* hint = System::GetHint (hxs_utf8 (hintKey, nullptr));
+
+		if (hint) {
+
+			value result = alloc_wstring (hint->c_str ());
+			delete hint;
+			return result;
+
+		} else {
+
+			return alloc_null ();
+
+		}
+
+	}
+
+	HL_PRIM vbyte* HL_NAME(hl_system_get_hint) (vbyte* key) {
+
+		#ifndef EMSCRIPTEN
+
+		std::wstring* hint = System::GetHint ((char*)key);
+
+		if (hint) {
+
+			vbyte* const result = hl_wstring_to_utf8_bytes (*hint);
+			delete hint;
+			return result;
+		}
+
+		#endif
+
+		return 0;
 
 	}
 
@@ -3261,6 +3346,20 @@ namespace lime {
 		const char *ctitle = title ? hl_to_utf8(title->bytes) : nullptr;
 		targetWindow->Alert (cmessage, ctitle);
 
+	}
+
+
+	bool lime_window_set_vsync_mode (value window, int mode) {
+
+		Window* targetWindow = (Window*)val_data (window);
+		return targetWindow->SetVSyncMode((WindowVSyncMode)mode);
+	}
+
+
+	HL_PRIM bool HL_NAME(hl_window_set_vsync_mode) (HL_CFFIPointer* window, int mode) {
+
+		Window* targetWindow = (Window*)window->ptr;
+		return targetWindow->SetVSyncMode((WindowVSyncMode)mode);
 	}
 
 
@@ -3380,6 +3479,22 @@ namespace lime {
 
 		Window* targetWindow = (Window*)window->ptr;
 		targetWindow->Focus ();
+
+	}
+
+
+	double lime_window_get_handle (value window) {
+
+		Window* targetWindow = (Window*)val_data (window);
+		return (uintptr_t)targetWindow->GetHandle ();
+
+	}
+
+
+	HL_PRIM double HL_NAME(hl_window_get_handle) (HL_CFFIPointer* window) {
+
+		Window* targetWindow = (Window*)window->ptr;
+		return (uintptr_t)targetWindow->GetHandle ();
 
 	}
 
@@ -4107,7 +4222,7 @@ namespace lime {
 	DEFINE_PRIME4v (lime_gamepad_rumble);
 	DEFINE_PRIME2 (lime_gzip_compress);
 	DEFINE_PRIME2 (lime_gzip_decompress);
-	DEFINE_PRIME2v (lime_haptic_vibrate);
+	DEFINE_PRIME3v (lime_haptic_vibrate);
 	DEFINE_PRIME3v (lime_image_data_util_color_transform);
 	DEFINE_PRIME6v (lime_image_data_util_copy_channel);
 	DEFINE_PRIME7v (lime_image_data_util_copy_pixels);
@@ -4156,6 +4271,8 @@ namespace lime {
 	DEFINE_PRIME0 (lime_system_get_ios_tablet);
 	DEFINE_PRIME0 (lime_system_get_num_displays);
 	DEFINE_PRIME0 (lime_system_get_device_orientation);
+	DEFINE_PRIME0 (lime_system_get_first_gyroscope_sensor_id);
+	DEFINE_PRIME0 (lime_system_get_first_accelerometer_sensor_id);
 	DEFINE_PRIME0 (lime_system_get_platform_label);
 	DEFINE_PRIME0 (lime_system_get_platform_name);
 	DEFINE_PRIME0 (lime_system_get_platform_version);
@@ -4164,10 +4281,13 @@ namespace lime {
 	DEFINE_PRIME1v (lime_system_open_file);
 	DEFINE_PRIME2v (lime_system_open_url);
 	DEFINE_PRIME1 (lime_system_set_allow_screen_timeout);
+	DEFINE_PRIME1 (lime_system_get_display_orientation);
+	DEFINE_PRIME1 (lime_system_get_hint);
 	DEFINE_PRIME2 (lime_system_set_windows_console_mode);
 	DEFINE_PRIME2v (lime_text_event_manager_register);
 	DEFINE_PRIME2v (lime_touch_event_manager_register);
 	DEFINE_PRIME3v (lime_window_alert);
+	DEFINE_PRIME2 (lime_window_set_vsync_mode);
 	DEFINE_PRIME1v (lime_window_close);
 	DEFINE_PRIME1v (lime_window_context_flip);
 	DEFINE_PRIME1 (lime_window_context_lock);
@@ -4176,6 +4296,7 @@ namespace lime {
 	DEFINE_PRIME5 (lime_window_create);
 	DEFINE_PRIME2v (lime_window_event_manager_register);
 	DEFINE_PRIME1v (lime_window_focus);
+	DEFINE_PRIME1 (lime_window_get_handle);
 	DEFINE_PRIME1 (lime_window_get_context);
 	DEFINE_PRIME1 (lime_window_get_context_type);
 	DEFINE_PRIME1 (lime_window_get_display);
@@ -4352,6 +4473,8 @@ namespace lime {
 	DEFINE_HL_PRIM (_BOOL, hl_system_get_ios_tablet, _NO_ARG);
 	DEFINE_HL_PRIM (_I32, hl_system_get_num_displays, _NO_ARG);
 	DEFINE_HL_PRIM (_I32, hl_system_get_device_orientation, _NO_ARG);
+	DEFINE_HL_PRIM (_I32, hl_system_get_first_gyroscope_sensor_id, _NO_ARG);
+	DEFINE_HL_PRIM (_I32, hl_system_get_first_accelerometer_sensor_id, _NO_ARG);
 	DEFINE_HL_PRIM (_BYTES, hl_system_get_platform_label, _NO_ARG);
 	DEFINE_HL_PRIM (_BYTES, hl_system_get_platform_name, _NO_ARG);
 	DEFINE_HL_PRIM (_BYTES, hl_system_get_platform_version, _NO_ARG);
@@ -4360,6 +4483,8 @@ namespace lime {
 	DEFINE_HL_PRIM (_VOID, hl_system_open_file, _STRING);
 	DEFINE_HL_PRIM (_VOID, hl_system_open_url, _STRING _STRING);
 	DEFINE_HL_PRIM (_BOOL, hl_system_set_allow_screen_timeout, _BOOL);
+	DEFINE_HL_PRIM (_I32, hl_system_get_display_orientation, _I32);
+	DEFINE_HL_PRIM (_VOID, hl_system_get_hint, _STRING);
 	DEFINE_HL_PRIM (_BOOL, hl_system_set_windows_console_mode, _I32 _I32);
 	DEFINE_HL_PRIM (_VOID, hl_text_event_manager_register, _FUN (_VOID, _NO_ARG) _TTEXT_EVENT);
 	DEFINE_HL_PRIM (_VOID, hl_touch_event_manager_register, _FUN (_VOID, _NO_ARG) _TTOUCH_EVENT);
@@ -4372,6 +4497,7 @@ namespace lime {
 	DEFINE_HL_PRIM (_TCFFIPOINTER, hl_window_create, _TCFFIPOINTER _I32 _I32 _I32 _STRING);
 	DEFINE_HL_PRIM (_VOID, hl_window_event_manager_register, _FUN (_VOID, _NO_ARG) _TWINDOW_EVENT);
 	DEFINE_HL_PRIM (_VOID, hl_window_focus, _TCFFIPOINTER);
+	DEFINE_HL_PRIM (_F64, hl_window_get_handle, _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_F64, hl_window_get_context, _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_BYTES, hl_window_get_context_type, _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_I32, hl_window_get_display, _TCFFIPOINTER);

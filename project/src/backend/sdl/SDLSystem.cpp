@@ -572,6 +572,45 @@ namespace lime {
 	}
 
 
+	#if defined(ANDROID) || defined (IPHONE)
+	int System::GetFirstGyroscopeSensorId () {
+
+		int numSensors = SDL_NumSensors ();
+
+		for (int i = 0; i < numSensors; i++) {
+
+			if (SDL_SensorGetDeviceType (i) == SDL_SENSOR_GYRO) {
+
+				return SDL_SensorGetDeviceInstanceID(i);
+
+			}
+
+		}
+
+		return -1;
+
+	}
+
+	int System::GetFirstAccelerometerSensorId () {
+
+		int numSensors = SDL_NumSensors ();
+
+		for (int i = 0; i < numSensors; i++) {
+
+			if (SDL_SensorGetDeviceType (i) == SDL_SENSOR_ACCEL) {
+
+				return SDL_SensorGetDeviceInstanceID(i);
+
+			}
+
+		}
+
+		return -1;
+
+	}
+	#endif
+
+
 	int System::GetNumDisplays () {
 
 		return SDL_GetNumVideoDisplays ();
@@ -601,6 +640,66 @@ namespace lime {
 		return allow;
 
 	}
+
+
+	int System::GetDisplayOrientation(int displayIndex) {
+		int orientation = 0;
+		switch(SDL_GetDisplayOrientation(displayIndex)) {
+			case SDL_ORIENTATION_UNKNOWN:
+				orientation = 0;
+				break;
+			case SDL_ORIENTATION_LANDSCAPE:
+				orientation = 1;
+				break;
+			case SDL_ORIENTATION_LANDSCAPE_FLIPPED:
+				orientation = 2;
+				break;
+			case SDL_ORIENTATION_PORTRAIT:
+				orientation = 3;
+				break;
+			case SDL_ORIENTATION_PORTRAIT_FLIPPED:
+				orientation = 4;
+				break;
+		}
+
+		return orientation;
+	}
+
+	std::wstring* System::GetHint (const char* key) {
+		std::string hintKey(key);
+
+    if (hintKey.rfind("SDL_", 0) != 0) {
+			hintKey = "SDL_" + hintKey;
+    }
+
+    SDL_GetHint(hintKey.c_str());
+
+		const char* raw = SDL_GetHint(hintKey.c_str());
+		if (!raw) {
+			return nullptr;
+		}
+
+		std::string hint = std::string (raw);
+		std::wstring* _hint = new std::wstring (hint.begin (), hint.end ());
+		return _hint;
+	}
+
+
+
+	#if !defined(IPHONE)
+	void System::OpenFile (const char* path) {
+
+		OpenURL (path, NULL);
+
+	}
+
+
+	void System::OpenURL (const char* url, const char* target) {
+
+		SDL_OpenURL (url);
+
+	}
+	#endif
 
 
 	FILE* FILE_HANDLE::getFile () {

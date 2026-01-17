@@ -1,9 +1,9 @@
 package org.haxe.lime;
 
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.net.Uri;
 import android.os.Build;
@@ -12,7 +12,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.view.DisplayCutout;
+import android.os.VibratorManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyCharacterMap;
@@ -157,6 +157,7 @@ public class GameActivity extends SDLActivity {
 	}
 
 
+	@SuppressWarnings("deprecation")
 	protected void onCreate (Bundle state) {
 
 		super.onCreate (state);
@@ -199,7 +200,18 @@ public class GameActivity extends SDLActivity {
 
 		if (checkSelfPermission(Manifest.permission.VIBRATE) == PackageManager.PERMISSION_GRANTED) {
 
-			vibrator = (Vibrator)mSingleton.getSystemService (Context.VIBRATOR_SERVICE);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+
+				VibratorManager vibratorManager = (VibratorManager)mSingleton.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+
+				if (vibratorManager != null)
+					vibrator = vibratorManager.getDefaultVibrator();
+
+			} else {
+
+				vibrator = (Vibrator)mSingleton.getSystemService(Context.VIBRATOR_SERVICE);
+
+			}
 
 		}
 
@@ -435,56 +447,6 @@ public class GameActivity extends SDLActivity {
 	::end::
 
 
-	public static void openFile (String path) {
-
-		try {
-
-			String extension = path;
-			int index = path.lastIndexOf ('.');
-
-			if (index > 0) {
-
-				extension = path.substring (index + 1);
-
-			}
-
-			String mimeType = MimeTypeMap.getSingleton ().getMimeTypeFromExtension (extension);
-			File file = new File (path);
-
-			Intent intent = new Intent ();
-			intent.setAction (Intent.ACTION_VIEW);
-			intent.setDataAndType (Uri.fromFile (file), mimeType);
-
-			Extension.mainActivity.startActivity (intent);
-
-		} catch (Exception e) {
-
-			Log.e ("GameActivity", e.toString ());
-			return;
-
-		}
-
-	}
-
-
-	public static void openURL (String url, String target) {
-
-		Intent browserIntent = new Intent (Intent.ACTION_VIEW).setData (Uri.parse (url));
-
-		try {
-
-			Extension.mainActivity.startActivity (browserIntent);
-
-		} catch (Exception e) {
-
-			Log.e ("GameActivity", e.toString ());
-			return;
-
-		}
-
-	}
-
-
 	public static void postUICallback (final long handle) {
 
 		Extension.callbackHandler.post (new Runnable () {
@@ -500,19 +462,22 @@ public class GameActivity extends SDLActivity {
 	}
 
 
-	public static void vibrate (int period, int duration) {
+	@SuppressWarnings("deprecation")
+	public static void vibrate (int period, int duration, int amplitude) {
 
-		if (vibrator == null || !vibrator.hasVibrator () || period < 0 || duration <= 0) {
+		if (vibrator == null || !vibrator.hasVibrator () || period < 0 || duration <= 0 || amplitude < 0) {
 
 			return;
 
 		}
 
+		int vibrationAmplitude = amplitude <= 0 ? VibrationEffect.DEFAULT_AMPLITUDE : Math.min(amplitude, 255);
+
 		if (period == 0) {
 
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-				vibrator.vibrate (VibrationEffect.createOneShot (duration, VibrationEffect.DEFAULT_AMPLITUDE));
+				vibrator.vibrate (VibrationEffect.createOneShot (duration, vibrationAmplitude));
 
 			} else {
 
@@ -526,17 +491,21 @@ public class GameActivity extends SDLActivity {
 			int periodMS = (int)Math.ceil (period / 2.0);
 			int count = (int)Math.ceil (duration / (double) periodMS);
 			long[] pattern = new long[count];
+			int[] amplitudes = new int[count];
 
-			// the first entry is the delay before vibration starts, so leave it as 0
-			for (int i = 1; i < count; i++) {
+			for (int i = 0; i < count; i++) {
 
-				pattern[i] = periodMS;
+				// the first entry is the delay before vibration starts, so leave it as 0
+				if (i > 0)
+					pattern[i] = periodMS;
+
+				amplitudes[i] = vibrationAmplitude;
 
 			}
 
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-				vibrator.vibrate (VibrationEffect.createWaveform (pattern, -1));
+				vibrator.vibrate (VibrationEffect.createWaveform (pattern, amplitudes, -1));
 
 			} else {
 

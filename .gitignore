@@ -11,7 +11,7 @@ Export/
 #ndll/*/*.lib
 #ndll/*/hl*
 #ndll/*/*.dll
-templates/bin/hl/*
+#templates/bin/hl/*
 project/all_objs
 project/obj
 project/vc*.pdb
@@ -19,8 +19,8 @@ project/vc*.pdb
 *.swp
 .idea/
 *.iml
-tools/*.n
-tools/*.exe
+#tools/*.n
+#tools/*.exe
 tools/obj
 haxedoc.xml
 docs/*.xml

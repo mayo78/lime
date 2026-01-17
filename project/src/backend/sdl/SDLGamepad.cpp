@@ -48,7 +48,7 @@ namespace lime {
 
 	}
 
-
+	// Gamepad API
 	void Gamepad::AddMapping (const char* content) {
 
 		SDL_GameControllerAddMapping (content);
@@ -57,6 +57,9 @@ namespace lime {
 
 
 	const char* Gamepad::GetDeviceGUID (int id) {
+		auto it = gameControllers.find(id);
+		if (it == gameControllers.end())
+			return nullptr;
 
 		auto it = gameControllers.find (id);
 		if (it == gameControllers.end ())
@@ -74,6 +77,9 @@ namespace lime {
 
 
 	const char* Gamepad::GetDeviceName (int id) {
+		auto it = gameControllers.find(id);
+		if (it == gameControllers.end())
+			return nullptr;
 
 		auto it = gameControllers.find (id);
 		if (it == gameControllers.end ())
@@ -103,6 +109,4 @@ namespace lime {
 		SDL_GameControllerRumble (it->second, lowFrequencyRumble * 0xFFFF, highFrequencyRumble * 0xFFFF, duration);
 
 	}
-
-
 }

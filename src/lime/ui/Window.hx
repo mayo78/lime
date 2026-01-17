@@ -38,6 +38,7 @@ class Window
 	#if (!lime_doc_gen || (js && html5))
 	public var element(default, null):#if (js && html5) Element #else Dynamic #end;
 	#end
+	public var nativeHandle(get, null):Dynamic;
 
 	/**
 	 * The current frame rate (measured in frames-per-second) of the window.
@@ -454,6 +455,15 @@ class Window
 		__backend.focus();
 	}
 
+	/**
+	 * Sets the swap interval for the current window.
+	 * @return `false` if the swap interval could not be set
+	**/
+	public function setVSyncMode(mode:WindowVSyncMode):Bool
+	{
+		return __backend.setVSyncMode(mode);
+	}
+
 	public function move(x:Int, y:Int):Void
 	{
 		__backend.move(x, y);
@@ -558,6 +568,11 @@ class Window
 	@:noCompletion private function set_displayMode(value:DisplayMode):DisplayMode
 	{
 		return __backend.setDisplayMode(value);
+	}
+
+	@:noCompletion private function get_nativeHandle():Dynamic
+	{
+		return __backend.getNativeHandle();
 	}
 
 	@:noCompletion private inline function get_borderless():Bool
