@@ -182,7 +182,7 @@ class AIRWindow extends FlashWindow
 		}
 	}
 
-	public function setVSyncMode(mode:WindowVSyncMode):Bool
+	public function setVSync(mode:Bool):Bool
 	{
 		return false;
 	}

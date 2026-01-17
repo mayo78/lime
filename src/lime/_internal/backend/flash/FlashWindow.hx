@@ -290,7 +290,7 @@ class FlashWindow
 
 	public function focus():Void {}
 
-	public function setVSyncMode(mode:WindowVSyncMode):Bool
+	public function setVSync(mode:WindowVSyncMode):Bool
 	{
 		return false;
 	}
@@ -652,11 +652,6 @@ class FlashWindow
 	public function setTitle(value:String):String
 	{
 		return value;
-	}
-
-	public function setVSync(value:Bool):Bool
-	{
-		return false;
 	}
 
 	public function setVisible(value:Bool):Bool

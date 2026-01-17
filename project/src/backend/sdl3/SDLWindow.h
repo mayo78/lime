@@ -19,12 +19,14 @@ namespace lime {
 			~SDLWindow ();
 
 			virtual void Alert (const char* message, const char* title);
+			virtual bool SetVSync (int mode);
 			virtual void Close ();
 			virtual void ContextFlip ();
 			virtual void* ContextLock (bool useCFFIValue);
 			virtual void ContextMakeCurrent ();
 			virtual void ContextUnlock ();
 			virtual void Focus ();
+			virtual void* GetHandle ();
 			virtual void* GetContext ();
 			virtual const char* GetContextType ();
 			// virtual Cursor GetCursor ();
@@ -58,7 +60,6 @@ namespace lime {
 			virtual void SetTextInputRect (Rectangle *rect);
 			virtual const char* SetTitle (const char* title);
 			virtual bool SetVisible (bool visible);
-			virtual bool SetVSync (bool vsync);
 			virtual void WarpMouse (int x, int y);
 			SDL_Renderer* sdlRenderer;
 			SDL_Texture* sdlTexture;

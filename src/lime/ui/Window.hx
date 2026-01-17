@@ -148,7 +148,7 @@ class Window
 	public var textInputEnabled(get, set):Bool;
 	public var title(get, set):String;
 	public var visible(get, set):Bool;
-	public var vsync(get, set):Bool;
+	public var vsync(get, set):WindowVSyncMode;
 	public var width(get, set):Int;
 	public var x(get, set):Int;
 	public var y(get, set):Int;
@@ -169,7 +169,7 @@ class Window
 	@:noCompletion private var __resizable:Bool;
 	@:noCompletion private var __scale:Float;
 	@:noCompletion private var __title:String;
-	@:noCompletion private var __vsync:Bool;
+	@:noCompletion private var __vsync:WindowVSyncMode;
 	@:noCompletion private var __width:Int;
 	@:noCompletion private var __x:Int;
 	@:noCompletion private var __y:Int;
@@ -221,7 +221,7 @@ class Window
 		__height = 0;
 		__fullscreen = false;
 		__scale = 1;
-		__vsync = ((__attributes.context != null && Reflect.hasField(__attributes.context, "vsync")) ? __attributes.context.vsync : false);
+		__vsync = ((__attributes.context != null && Reflect.hasField(__attributes.context, "vsync")) ? (__attributes.context.vsync ? ON : OFF) : OFF);
 		__x = 0;
 		__y = 0;
 		__title = Reflect.hasField(__attributes, "title") ? __attributes.title : "";
@@ -459,9 +459,9 @@ class Window
 	 * Sets the swap interval for the current window.
 	 * @return `false` if the swap interval could not be set
 	**/
-	public function setVSyncMode(mode:WindowVSyncMode):Bool
+	public function setVSync(mode:WindowVSyncMode):Bool
 	{
-		return __backend.setVSyncMode(mode);
+		return __backend.setVSync(mode);
 	}
 
 	public function move(x:Int, y:Int):Void
@@ -761,14 +761,15 @@ class Window
 		return !__hidden;
 	}
 
-	@:noCompletion private inline function get_vsync():Bool
+	@:noCompletion private inline function get_vsync():WindowVSyncMode
 	{
 		return __vsync;
 	}
 
-	@:noCompletion private inline function set_vsync(value:Bool):Bool
+	@:noCompletion private inline function set_vsync(value:WindowVSyncMode):WindowVSyncMode
 	{
-		return __vsync = __backend.setVSync(value);
+		__backend.setVSync(value);
+		return __vsync = value;
 	}
 
 	@:noCompletion private inline function get_width():Int

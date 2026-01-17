@@ -1,6 +1,7 @@
 #include "SDLWindow.h"
 #include "SDLCursor.h"
 #include "SDLApplication.h"
+#include "system/System.h"
 #include "../../graphics/opengl/OpenGL.h"
 #include "../../graphics/opengl/OpenGLBindings.h"
 #include <SDL3/SDL_render.h>
@@ -29,7 +30,11 @@ namespace lime {
 	SDL_Cursor* SDLCursor::waitCursor = 0;
 	SDL_Cursor* SDLCursor::waitArrowCursor = 0;
 
+	#if defined (IPHONE) || defined (APPLETV)
+	static bool displayModeSet = true;
+	#else
 	static bool displayModeSet = false;
+	#endif
 
 
 	SDLWindow::SDLWindow (Application* application, int width, int height, int flags, const char* title) {
@@ -217,11 +222,11 @@ namespace lime {
 
 				if (flags & WINDOW_FLAG_VSYNC) {
 
-					SDL_GL_SetSwapInterval (1);
+					SetVSync (WINDOW_VSYNC_ON);
 
 				} else {
 
-					SDL_GL_SetSwapInterval (0);
+					SetVSync (WINDOW_VSYNC_OFF);
 
 				}
 
@@ -328,7 +333,11 @@ namespace lime {
 
 		if (message) {
 
+			#if !defined(IPHONE)
 			SDL_ShowSimpleMessageBox (SDL_MESSAGEBOX_INFORMATION, title, message, sdlWindow);
+			#else
+			System::showIOSAlert(message, title);
+			#endif
 
 		}
 
@@ -494,6 +503,31 @@ namespace lime {
 
 	}
 
+	void* SDLWindow::GetHandle () {
+
+		// what do you want from me here
+		// ok like you want me to actually code in c++ but i dont want to do that so im not
+		//#if defined (SDL_VIDEO_DRIVER_WINDOWS)
+		//	return info.info.win.window;
+		//#elif defined (SDL_VIDEO_DRIVER_WINRT)
+		//	return info.info.winrt.window;
+		//#elif defined (SDL_VIDEO_DRIVER_X11)
+		//	return (void*)info.info.x11.window;
+		//#elif defined (SDL_VIDEO_DRIVER_DIRECTFB)
+		//	return info.info.dfb.window;
+		//#elif defined (SDL_VIDEO_DRIVER_COCOA)
+		//	return info.info.cocoa.window;
+		//#elif defined (SDL_VIDEO_DRIVER_UIKIT)
+		//	return info.info.uikit.window;
+		//#elif defined (SDL_VIDEO_DRIVER_WAYLAND)
+		//	return info.info.wl.surface;
+		//#elif defined (SDL_VIDEO_DRIVER_ANDROID)
+		//	return info.info.android.window;
+		//#else
+			return nullptr;
+		//#endif
+
+	}
 
 	void* SDLWindow::GetContext () {
 
@@ -1070,12 +1104,10 @@ namespace lime {
 	}
 
 
-	bool SDLWindow::SetVSync (bool vsync) {
+	bool SDLWindow::SetVSync (int mode) {
 
-		SDL_GL_SetSwapInterval(vsync ? 1 : 0);
-
-		return vsync;
-
+		int res = SDL_GL_SetSwapInterval (mode);
+		return res == mode || res == 0; // 0 sometimes means a success on some contexts?
 	}
 
 	void SDLWindow::WarpMouse (int x, int y) {

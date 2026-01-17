@@ -384,7 +384,7 @@ class HTML5Window
 
 	public function focus():Void {}
 
-	public function setVSyncMode(mode:lime.ui.WindowVSyncMode):Bool
+	public function setVSync(mode:lime.ui.WindowVSyncMode):Bool
 	{
 		return false;
 	}
@@ -1351,11 +1351,6 @@ class HTML5Window
 		}
 
 		return value;
-	}
-
-	public function setVSync(value:Bool):Bool
-	{
-		return false;
 	}
 
 	public function setVisible(value:Bool):Bool

@@ -223,11 +223,11 @@ namespace lime {
 
 				if (flags & WINDOW_FLAG_VSYNC) {
 
-					SetVSyncMode (WINDOW_VSYNC_ON);
+					SetVSync (WINDOW_VSYNC_ON);
 
 				} else {
 
-					SetVSyncMode (WINDOW_VSYNC_OFF);
+					SetVSync (WINDOW_VSYNC_OFF);
 
 				}
 
@@ -354,7 +354,7 @@ namespace lime {
 	}
 
 
-	bool SDLWindow::SetVSyncMode (int mode) {
+	bool SDLWindow::SetVSync (int mode) {
 		int res = SDL_GL_SetSwapInterval (mode);
 		return res == mode || res == 0; // 0 sometimes means a success on some contexts?
 	}
@@ -1159,14 +1159,6 @@ namespace lime {
 		SDL_SetWindowTitle (sdlWindow, title);
 
 		return title;
-
-	}
-
-	bool SDLWindow::SetVSync (bool vsync) {
-
-		SDL_GL_SetSwapInterval(vsync ? 1 : 0);
-
-		return vsync;
 
 	}
 

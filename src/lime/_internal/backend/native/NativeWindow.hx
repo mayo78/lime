@@ -247,7 +247,7 @@ class NativeWindow
 		}
 	}
 
-	public function setVSyncMode(mode:WindowVSyncMode):Bool
+	public function setVSync(mode:WindowVSyncMode):Bool
 	{
 		if (handle != null)
 		{
@@ -739,18 +739,6 @@ class NativeWindow
 		{
 			#if (!macro && lime_cffi)
 			NativeCFFI.lime_window_set_visible(handle, value);
-			#end
-		}
-
-		return value;
-	}
-
-	public function setVSync(value:Bool):Bool
-	{
-		if (handle != null)
-		{
-			#if (!macro && lime_cffi)
-			return NativeCFFI.lime_window_set_vsync(handle, value);
 			#end
 		}
 
