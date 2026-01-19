@@ -347,7 +347,9 @@ namespace lime {
 			alloc_field (display, id_bounds, Rectangle (bounds.x, bounds.y, bounds.w, bounds.h).Value ());
 
 			Rectangle safeAreaInsets;
-			Display::GetSafeAreaInsets(id - 1, &safeAreaInsets);
+			//#if !defined (ANDROID)
+			//Display::GetSafeAreaInsets(id - 1, &safeAreaInsets);
+			//#endif
 			alloc_field (display, id_safeArea,
 				Rectangle (bounds.x + safeAreaInsets.x,
 					bounds.y + safeAreaInsets.y,
@@ -493,7 +495,9 @@ namespace lime {
 			hl_dyn_setp (display, id_bounds, &hlt_dynobj, _bounds);
 
 			Rectangle safeAreaInsets;
-			Display::GetSafeAreaInsets(id, &safeAreaInsets);
+			//#if !defined (ANDROID)
+			//Display::GetSafeAreaInsets(id, &safeAreaInsets);
+			//#endif
 			vdynamic* _safeArea = (vdynamic*)hl_alloc_dynobj ();
 			hl_dyn_seti (_safeArea, id_x, &hlt_i32, bounds.x + safeAreaInsets.x);
 			hl_dyn_seti (_safeArea, id_y, &hlt_i32, bounds.y + safeAreaInsets.y);
@@ -613,17 +617,19 @@ namespace lime {
 	#if defined(ANDROID) || defined (IPHONE)
 	int System::GetFirstGyroscopeSensorId () {
 
-		int numSensors = SDL_NumSensors ();
+		// duuuuuuuude
+		//int * numSensors = 0;
+		//SDL_GetSensors(numSensors);
 
-		for (int i = 0; i < numSensors; i++) {
+		//for (int i = 0; i < numSensors; i++) {
 
-			if (SDL_SensorGetDeviceType (i) == SDL_SENSOR_GYRO) {
+		//	if (SDL_GetSensorTypeForID (i) == SDL_SENSOR_GYRO) {
 
-				return SDL_SensorGetDeviceInstanceID(i);
+		//		return SDL_SensorGetDeviceInstanceID(i);
 
-			}
+		//	}
 
-		}
+		//}
 
 		return -1;
 
@@ -631,17 +637,19 @@ namespace lime {
 
 	int System::GetFirstAccelerometerSensorId () {
 
-		int numSensors = SDL_NumSensors ();
+		// dude
+		//int * numSensors = 0;
+		//SDL_GetSensors(numSensors);
 
-		for (int i = 0; i < numSensors; i++) {
+		//for (int i = 0; i < numSensors; i++) {
 
-			if (SDL_SensorGetDeviceType (i) == SDL_SENSOR_ACCEL) {
+		//	if (SDL_GetSensorTypeForID (i) == SDL_SENSOR_ACCEL) {
 
-				return SDL_SensorGetDeviceInstanceID(i);
+		//		return SDL_SensorGetDeviceInstanceID(i);
 
-			}
+		//	}
 
-		}
+		//}
 
 		return -1;
 

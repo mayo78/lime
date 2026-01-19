@@ -85,17 +85,17 @@ class NativeApplication
 		handle = NativeCFFI.lime_application_create();
 		#end
 
-		#if (ios || android)
-		final accelerometerID:Int = NativeCFFI.lime_system_get_first_accelerometer_sensor_id();
+		//#if (ios || android)
+		//final accelerometerID:Int = NativeCFFI.lime_system_get_first_accelerometer_sensor_id();
 
-		if (accelerometerID > 0)
-			Sensor.registerSensor(SensorType.ACCELEROMETER, accelerometerID);
+		//if (accelerometerID > 0)
+		//	Sensor.registerSensor(SensorType.ACCELEROMETER, accelerometerID);
 
-		final gyroscopeID:Int = NativeCFFI.lime_system_get_first_gyroscope_sensor_id();
+		//final gyroscopeID:Int = NativeCFFI.lime_system_get_first_gyroscope_sensor_id();
 
-		if (gyroscopeID > 0)
-			Sensor.registerSensor(SensorType.GYROSCOPE, gyroscopeID);
-		#end
+		//if (gyroscopeID > 0)
+		//	Sensor.registerSensor(SensorType.GYROSCOPE, gyroscopeID);
+		//#end
 	}
 
 	private function advanceTimer():Void

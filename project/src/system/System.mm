@@ -89,11 +89,11 @@
 			break;
 	};
 
-	lime::OrientationEvent event;
-	event.orientation = orientation;
-	event.display = -1;
-	event.type = lime::DEVICE_ORIENTATION_CHANGE;
-	lime::OrientationEvent::Dispatch(&event);
+	//lime::OrientationEvent event;
+	//event.orientation = orientation;
+	//event.display = -1;
+	//event.type = lime::DEVICE_ORIENTATION_CHANGE;
+	//lime::OrientationEvent::Dispatch(&event);
 
 }
 

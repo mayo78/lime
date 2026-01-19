@@ -339,7 +339,7 @@ namespace lime {
 			alloc_field (display, id_bounds, Rectangle (bounds.x, bounds.y, bounds.w, bounds.h).Value ());
 
 			Rectangle safeAreaInsets;
-			Display::GetSafeAreaInsets(id, &safeAreaInsets);
+			//Display::GetSafeAreaInsets(id, &safeAreaInsets);
 			alloc_field (display, id_safeArea,
 				Rectangle (bounds.x + safeAreaInsets.x,
 					bounds.y + safeAreaInsets.y,
@@ -467,7 +467,7 @@ namespace lime {
 			hl_dyn_setp (display, id_bounds, &hlt_dynobj, _bounds);
 
 			Rectangle safeAreaInsets;
-			Display::GetSafeAreaInsets(id, &safeAreaInsets);
+			//Display::GetSafeAreaInsets(id, &safeAreaInsets);
 			vdynamic* _safeArea = (vdynamic*)hl_alloc_dynobj ();
 			hl_dyn_seti (_safeArea, id_x, &hlt_i32, bounds.x + safeAreaInsets.x);
 			hl_dyn_seti (_safeArea, id_y, &hlt_i32, bounds.y + safeAreaInsets.y);

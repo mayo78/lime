@@ -1,8 +1,4 @@
 <xml>
-
-	<set name="PLATFORM" value="android-21" if="android" />
-	<set name="HXCPP_CPP17" value="1" />
-	<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.13" if="mac" />
 	<set name="HXCPP_CPP20" value="1" />
 
 	<include name="${HXCPP}/build-tool/BuildCommon.xml" />
@@ -64,8 +60,6 @@
 
 	<files id="lime">
 
-		<!-- setting HXCPP_CPP11 doesn't seem to apply to .mm files -->
-        <compilerflag value="-std=c++11" unless="isMsvc" />
 		<compilerflag value="-Iinclude" />
 
 		<file name="src/ExternalInterface.cpp" />
@@ -381,13 +375,10 @@
 		<file name="src/system/CFFI.cpp" />
 		<file name="src/system/CFFIPointer.cpp" />
 		<file name="src/system/ClipboardEvent.cpp" />
-		<file name="src/system/Display.mm" if="mac || ios" />
-		<file name="src/system/Display.cpp" unless="mac || ios" />
 		<file name="src/system/DisplayMode.cpp" />
 		<file name="src/system/JNI.cpp" if="android" />
 		<file name="src/system/Locale.cpp" unless="mac || ios" />
 		<file name="src/system/Locale.mm" if="mac || ios" />
-		<file name="src/system/OrientationEvent.cpp" />
 		<file name="src/system/SensorEvent.cpp" />
 		<file name="src/system/System.cpp" unless="ios" />
 		<file name="src/system/System.mm" if="ios" />
@@ -458,7 +449,7 @@
 		<files id="native-toolkit-harfbuzz" if="LIME_HARFBUZZ" />
 		<files id="native-toolkit-jpeg" if="LIME_JPEG" />
 		<files id="native-toolkit-lzma" if="LIME_LZMA" />
-		<files id="native-toolkit-mbedtls" if="LIME_MBEDTLS" unless="static_link" />
+		<files id="native-toolkit-mbedtls" if="LIME_MBEDTLS" />
 		<files id="native-toolkit-mojoal" if="LIME_MOJOAL" />
 		<files id="native-toolkit-neko" if="LIME_NEKO" />
 		<files id="native-toolkit-ogg" if="LIME_OGG" />
@@ -499,8 +490,6 @@
 				<lib name="comdlg32.lib" />
 				<lib name="setupapi.lib" />
 				<lib name="avrt.lib" if="LIME_OPENALSOFT"/>
-
-				<lib name="avrt.lib" if ="LIME_OPENALSOFT"/>
 
 				<lib name="usp10.lib" if="LIME_HARFBUZZ" />
 				<lib name="rpcrt4.lib" if="LIME_HARFBUZZ" />
@@ -597,7 +586,6 @@
 			</section>
 
 			<section if="tvos">
-
 
 				<vflag name="-framework" value="UIKit" />
 				<vflag name="-framework" value="Foundation" />

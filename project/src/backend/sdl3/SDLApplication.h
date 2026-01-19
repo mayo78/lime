@@ -7,7 +7,7 @@
 #include <app/ApplicationEvent.h>
 #include <graphics/RenderEvent.h>
 #include <system/ClipboardEvent.h>
-#include <system/OrientationEvent.h>
+//#include <system/OrientationEvent.h>
 #include <system/SensorEvent.h>
 #include <ui/DropEvent.h>
 #include <ui/GamepadEvent.h>
@@ -57,7 +57,7 @@ namespace lime {
 			int WaitEvent (SDL_Event* event);
 
 			#if defined(ANDROID) || defined (IPHONE)
-			static int HandleAppLifecycleEvent (void* userdata, SDL_Event* event);
+			static bool HandleAppLifecycleEvent (void* userdata, SDL_Event* event);
 			#endif
 			static void UpdateFrame ();
 			static void UpdateFrame (void*);
@@ -77,7 +77,7 @@ namespace lime {
 			Uint32 lastUpdate;
 			MouseEvent mouseEvent;
 			Uint32 nextUpdate;
-			OrientationEvent orientationEvent;
+			//OrientationEvent orientationEvent;
 			RenderEvent renderEvent;
 			SensorEvent sensorEvent;
 			TextEvent textEvent;

@@ -43,7 +43,7 @@ namespace lime {
 
 		if (SDL_Init (initFlags) != 0) {
 
-			printf ("Could not initialize SDL: %s.\n", SDL_GetError ());
+			printf ("Could not initialize SDL LOL: %s.\n", SDL_GetError ());
 
 		}
 
@@ -71,7 +71,7 @@ namespace lime {
 		JoystickEvent joystickEvent;
 		KeyEvent keyEvent;
 		MouseEvent mouseEvent;
-		OrientationEvent orientationEvent;
+		//OrientationEvent orientationEvent;
 		RenderEvent renderEvent;
 		SensorEvent sensorEvent;
 		TextEvent textEvent;
@@ -230,10 +230,10 @@ namespace lime {
 						// this is the orientation of what is rendered, which
 						// may not exactly match the orientation of the device,
 						// if the app was locked to portrait or landscape.
-						orientationEvent.type = DISPLAY_ORIENTATION_CHANGE;
-						orientationEvent.orientation = event->display.data1;
-						orientationEvent.display = event->display.display;
-						OrientationEvent::Dispatch (&orientationEvent);
+						//orientationEvent.type = DISPLAY_ORIENTATION_CHANGE;
+						//orientationEvent.orientation = event->display.data1;
+						//orientationEvent.display = event->display.display;
+						//OrientationEvent::Dispatch (&orientationEvent);
 
 						break;
 

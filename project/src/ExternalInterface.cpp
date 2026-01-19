@@ -26,7 +26,7 @@
 #include <system/FileWatcher.h>
 #include <system/JNI.h>
 #include <system/Locale.h>
-#include <system/OrientationEvent.h>
+//#include <system/OrientationEvent.h>
 #include <system/SensorEvent.h>
 #include <system/System.h>
 #include <text/Font.h>
@@ -2656,23 +2656,6 @@ namespace lime {
 	}
 
 
-	void lime_orientation_event_manager_register (value callback, value eventObject) {
-
-		OrientationEvent::callback = new ValuePointer (callback);
-		OrientationEvent::eventObject = new ValuePointer (eventObject);
-		System::EnableDeviceOrientationChange(true);
-
-	}
-
-
-	HL_PRIM void HL_NAME(hl_orientation_event_manager_register) (vclosure* callback, OrientationEvent* eventObject) {
-
-		OrientationEvent::callback = new ValuePointer (callback);
-		OrientationEvent::eventObject = new ValuePointer ((vobj*)eventObject);
-
-	}
-
-
 	value lime_png_decode_bytes (value data, bool decodeData, value buffer) {
 
 		ImageBuffer imageBuffer (buffer);
@@ -2970,65 +2953,6 @@ namespace lime {
 		return System::GetNumDisplays ();
 
 	}
-
-
-	int lime_system_get_device_orientation () {
-
-		return System::GetDeviceOrientation();
-
-	}
-
-
-	HL_PRIM int HL_NAME(hl_system_get_device_orientation) () {
-
-		return System::GetDeviceOrientation();
-
-	}
-
-
-	int lime_system_get_first_gyroscope_sensor_id () {
-
-		#if defined(ANDROID) || defined (IPHONE)
-		return System::GetFirstGyroscopeSensorId ();
-		#else
-		return -1;
-		#endif
-
-	}
-
-
-	HL_PRIM int HL_NAME(hl_system_get_first_gyroscope_sensor_id) () {
-
-		#if defined(ANDROID) || defined (IPHONE)
-		return System::GetFirstGyroscopeSensorId ();
-		#else
-		return -1;
-		#endif
-
-	}
-
-
-	int lime_system_get_first_accelerometer_sensor_id() {
-
-		#if defined(ANDROID) || defined (IPHONE)
-		return System::GetFirstAccelerometerSensorId ();
-		#else
-		return -1;
-		#endif
-
-	}
-
-
-	HL_PRIM int HL_NAME(hl_system_get_first_accelerometer_sensor_id) () {
-
-		#if defined(ANDROID) || defined (IPHONE)
-		return System::GetFirstAccelerometerSensorId ();
-		#else
-		return -1;
-		#endif
-
-	}
-
 
 	value lime_system_get_platform_label () {
 
@@ -4257,7 +4181,6 @@ namespace lime {
 	DEFINE_PRIME2 (lime_lzma_decompress);
 	DEFINE_PRIME2v (lime_mouse_event_manager_register);
 	DEFINE_PRIME1v (lime_neko_execute);
-	DEFINE_PRIME2v (lime_orientation_event_manager_register);
 	DEFINE_PRIME3 (lime_png_decode_bytes);
 	DEFINE_PRIME3 (lime_png_decode_file);
 	DEFINE_PRIME2v (lime_render_event_manager_register);
@@ -4270,9 +4193,6 @@ namespace lime {
 	DEFINE_PRIME1 (lime_system_get_display);
 	DEFINE_PRIME0 (lime_system_get_ios_tablet);
 	DEFINE_PRIME0 (lime_system_get_num_displays);
-	DEFINE_PRIME0 (lime_system_get_device_orientation);
-	DEFINE_PRIME0 (lime_system_get_first_gyroscope_sensor_id);
-	DEFINE_PRIME0 (lime_system_get_first_accelerometer_sensor_id);
 	DEFINE_PRIME0 (lime_system_get_platform_label);
 	DEFINE_PRIME0 (lime_system_get_platform_name);
 	DEFINE_PRIME0 (lime_system_get_platform_version);
@@ -4459,7 +4379,6 @@ namespace lime {
 	DEFINE_HL_PRIM (_TBYTES, hl_lzma_decompress, _TBYTES _TBYTES);
 	DEFINE_HL_PRIM (_VOID, hl_mouse_event_manager_register, _FUN (_VOID, _NO_ARG) _TMOUSE_EVENT);
 	// DEFINE_PRIME1v (lime_neko_execute);
-	DEFINE_HL_PRIM (_VOID, hl_orientation_event_manager_register, _FUN (_VOID, _NO_ARG) _TORIENTATION_EVENT);
 	DEFINE_HL_PRIM (_TIMAGEBUFFER, hl_png_decode_bytes, _TBYTES _BOOL _TIMAGEBUFFER);
 	DEFINE_HL_PRIM (_TIMAGEBUFFER, hl_png_decode_file, _STRING _BOOL _TIMAGEBUFFER);
 	DEFINE_HL_PRIM (_VOID, hl_render_event_manager_register, _FUN (_VOID, _NO_ARG) _TRENDER_EVENT);
@@ -4472,9 +4391,6 @@ namespace lime {
 	DEFINE_HL_PRIM (_DYN, hl_system_get_display, _I32);
 	DEFINE_HL_PRIM (_BOOL, hl_system_get_ios_tablet, _NO_ARG);
 	DEFINE_HL_PRIM (_I32, hl_system_get_num_displays, _NO_ARG);
-	DEFINE_HL_PRIM (_I32, hl_system_get_device_orientation, _NO_ARG);
-	DEFINE_HL_PRIM (_I32, hl_system_get_first_gyroscope_sensor_id, _NO_ARG);
-	DEFINE_HL_PRIM (_I32, hl_system_get_first_accelerometer_sensor_id, _NO_ARG);
 	DEFINE_HL_PRIM (_BYTES, hl_system_get_platform_label, _NO_ARG);
 	DEFINE_HL_PRIM (_BYTES, hl_system_get_platform_name, _NO_ARG);
 	DEFINE_HL_PRIM (_BYTES, hl_system_get_platform_version, _NO_ARG);
