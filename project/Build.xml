@@ -193,8 +193,6 @@
 			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/vorbis/include/" />
 			<compilerflag value="-DLIME_OGG" />
 
-			<file name="src/media/containers/OGG.cpp" />
-
 		</section>
 
 		<section if="LIME_OPENAL">
@@ -326,7 +324,6 @@
 		<file name="src/math/Rectangle.cpp" />
 		<file name="src/math/Vector2.cpp" />
 		<file name="src/media/AudioBuffer.cpp" />
-		<file name="src/media/containers/WAV.cpp" />
 		<file name="src/system/CFFI.cpp" />
 		<file name="src/system/CFFIPointer.cpp" />
 		<file name="src/system/ClipboardEvent.cpp" />
