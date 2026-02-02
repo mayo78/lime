@@ -4428,6 +4428,12 @@ extern "C" int lime_curl_register_prims ();
 extern "C" int lime_curl_register_prims () { return 0; }
 #endif
 
+#ifdef LIME_DRLIBS
+extern "C" int lime_drlibs_register_prims ();
+#else
+extern "C" int lime_drlibs_register_prims () { return 0; }
+#endif
+
 #ifdef LIME_HARFBUZZ
 extern "C" int lime_harfbuzz_register_prims ();
 #else
@@ -4457,6 +4463,7 @@ extern "C" int lime_register_prims () {
 
 	lime_cairo_register_prims ();
 	lime_curl_register_prims ();
+	lime_drlibs_register_prims ();
 	lime_harfbuzz_register_prims ();
 	lime_openal_register_prims ();
 	lime_opengl_register_prims ();
