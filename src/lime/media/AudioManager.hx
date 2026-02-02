@@ -18,6 +18,11 @@ import lime.media.openal.AL;
 import lime.media.openal.ALC;
 import lime.media.openal.ALContext;
 import lime.media.openal.ALDevice;
+#elseif (js && html5)
+import lime.media.howlerjs.Howler;
+#elseif flash
+import flash.media.SoundMixer;
+import flash.media.SoundTransform;
 #end
 
 #if !lime_debug
@@ -74,7 +79,20 @@ class AudioManager
 	**/
 	public static var automaticDefaultPlaybackDevice:Bool = true;
 
+	/**
+		Mutes the audio manager playback.
+	**/
+	public static var muted(get, set):Bool;
+
+	/**
+		The gain (volume) of the audio manager. A value of `1.0` represents the default volume.
+		Property is in a linear scale.
+	**/
+	public static var gain(get, set):Float;
+
 	@:noCompletion private static var __updateTimer:Timer;
+	@:noCompletion private static var __muted:Bool;
+	@:noCompletion private static var __gain:Float;
 	#if lime_openal
 	@:noCompletion private static var __captureExtSupported:Bool;
 	@:noCompletion private static var __disconnectExtSupported:Bool;
@@ -89,6 +107,8 @@ class AudioManager
 	@:noCompletion private static var __stereoAnglesSupported:Bool;
 
 	@:noCompletion private static var __alRequestEvents:Deque<ALDeviceEvent> = new Deque();
+	#elseif flash
+	@:noCompletion private static var __flashSoundTransform:SoundTransform;
 	#end
 
 	public static function init(context:AudioContext = null)
@@ -287,6 +307,60 @@ class AudioManager
 		var device = ALC.getContextsDevice(currentContext);
 		if (device != null) ALC.pauseDevice(device);
 		#end
+	}
+
+	@:noCompletion private static inline function get_muted():Bool
+	{
+		return __muted;
+	}
+
+	@:noCompletion private static inline function set_muted(value:Bool):Bool
+	{
+		if (context == null) return __muted;
+		__muted = value;
+
+		#if !lime_doc_gen
+		#if lime_openal
+		if (context.type == OPENAL) AL.listenerf(AL.GAIN, value ? 0 : __gain);
+		#elseif (js && html5)
+		if (context.type == HTML5 || context.type == WEB) Howler.mute(value);
+		#elseif flash
+		if (context.type == FLASH)
+		{
+			if (__flashSoundTransform == null) __flashSoundTransform = new SoundTransform();
+			__flashSoundTransform.gain = value ? 0 : __gain;
+			SoundMIxer.soundTransform = __flashSoundTransform;
+		}
+		#end
+		#end
+		return value;
+	}
+
+	@:noCompletion private static inline function get_gain():Float
+	{
+		return __gain;
+	}
+
+	@:noCompletion private static inline function set_gain(value:Float):Float
+	{
+		if (context == null) return __gain;
+		__gain = value;
+
+		#if !lime_doc_gen
+		#if lime_openal
+		if (context.type == OPENAL) AL.listenerf(AL.GAIN, __muted ? 0 : value);
+		#elseif (js && html5)
+		if (context.type == HTML5 || context.type == WEB) Howler.volume(value);
+		#elseif flash
+		if (context.type == FLASH)
+		{
+			if (__flashSoundTransform == null) __flashSoundTransform = new SoundTransform();
+			__flashSoundTransform.volume = __muted ? 0 : value;
+			SoundMIxer.soundTransform = __flashSoundTransform;
+		}
+		#end
+		#end
+		return value;
 	}
 
 	@:noCompletion private static function __update():Void
