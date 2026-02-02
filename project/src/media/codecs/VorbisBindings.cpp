@@ -345,7 +345,8 @@ namespace lime {
 
 		OggVorbis_File* file = (OggVorbis_File*)(uintptr_t)val_data (vorbisFile);
 		ogg_int64_t pos = ((ogg_int64_t)val_number (posHigh) << 32) | (ogg_int64_t)val_number (posLow);
-		return ov_pcm_seek (file, pos);
+		if (pos > 0) return ov_pcm_seek (file, pos);
+		else return ov_raw_seek (file, 0);
 
 	}
 
@@ -562,6 +563,89 @@ namespace lime {
 	}
 
 
+	int lime_vorbis_file_decode (value vorbisFile, value buffer, int position, int length, int word) {
+
+		if (val_is_null (buffer)) {
+
+			return 0;
+
+		}
+
+		Bytes bytes;
+		bytes.Set (buffer);
+
+		#ifdef HXCPP_BIG_ENDIAN
+		#define BUFFER_READ_TYPE 1
+		#else
+		#define BUFFER_READ_TYPE 0
+		#endif
+
+		int bitstream;
+		int size = 0;
+
+		OggVorbis_File* file = (OggVorbis_File*)(uintptr_t)val_data (vorbisFile);
+		while (size < length) {
+			long result = ov_read (file, (char*)bytes.b + position, length - size, BUFFER_READ_TYPE, word, 1, &bitstream);
+
+			if (result != OV_HOLE) {
+				if (result <= OV_EREAD) {
+					return 0;
+				}
+				else if (result == 0) {
+					break;
+				}
+				else {
+					size += result;
+					position += result;
+				}
+			}
+		}
+
+		return size;
+
+	}
+
+
+	HL_PRIM int HL_NAME(hl_vorbis_file_decode) (HL_CFFIPointer* vorbisFile, Bytes* buffer, int position, int length, int word) {
+
+		if (!buffer) {
+
+			return 0;
+
+		}
+
+		#ifdef HXCPP_BIG_ENDIAN
+		#define BUFFER_READ_TYPE 1
+		#else
+		#define BUFFER_READ_TYPE 0
+		#endif
+
+		int bitstream;
+		int size = 0;
+
+		OggVorbis_File* file = (OggVorbis_File*)(uintptr_t)vorbisFile->ptr;
+		while (size < length) {
+			long result = ov_read (file, (char*)buffer->b + position, length - size, BUFFER_READ_TYPE, word, 1, &bitstream);
+
+			if (result != OV_HOLE) {
+				if (result <= OV_EREAD) {
+					return 0;
+				}
+				else if (result == 0) {
+					break;
+				}
+				else {
+					size += result;
+					position += result;
+				}
+			}
+		}
+
+		return size;
+
+	}
+
+
 	value lime_vorbis_file_read_float (value vorbisFile, value pcmChannels, int samples) {
 
 		//Bytes bytes;
@@ -752,6 +836,7 @@ namespace lime {
 	DEFINE_PRIME1 (lime_vorbis_file_raw_tell);
 	DEFINE_PRIME2 (lime_vorbis_file_raw_total);
 	DEFINE_PRIME7 (lime_vorbis_file_read);
+	DEFINE_PRIME5 (lime_vorbis_file_decode);
 	DEFINE_PRIME3 (lime_vorbis_file_read_float);
 	DEFINE_PRIME1 (lime_vorbis_file_seekable);
 	DEFINE_PRIME2 (lime_vorbis_file_serial_number);
@@ -786,6 +871,7 @@ namespace lime {
 	DEFINE_HL_PRIM (_DYN,          hl_vorbis_file_raw_tell,           _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_DYN,          hl_vorbis_file_raw_total,          _TCFFIPOINTER _I32);
 	DEFINE_HL_PRIM (_DYN,          hl_vorbis_file_read,               _TCFFIPOINTER _TBYTES _I32 _I32 _BOOL _I32 _BOOL);
+	DEFINE_HL_PRIM (_DYN,          hl_vorbis_file_decode,             _TCFFIPOINTER _TBYTES _I32 _I32 _I32);
 	DEFINE_HL_PRIM (_DYN,          hl_vorbis_file_read_float,         _TCFFIPOINTER _TBYTES _I32);
 	DEFINE_HL_PRIM (_BOOL,         hl_vorbis_file_seekable,           _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_I32,          hl_vorbis_file_serial_number,      _TCFFIPOINTER _I32);

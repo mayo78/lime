@@ -21,7 +21,7 @@ import lime.math.Vector4;
 class AudioSource
 {
 	/**
-		An event that is dispatched when the audio playback is complete.
+		An event that is dispatched when this audio playback have completed or looped.
 	**/
 	public var onComplete = new Event<Void->Void>();
 	
@@ -33,17 +33,29 @@ class AudioSource
 	/**
 		The current playback position of the audio, in milliseconds.
 	**/
-	public var currentTime(get, set):Int;
+	public var currentTime(get, set):Float;
 
 	/**
 		The gain (volume) of the audio. A value of `1.0` represents the default volume.
+		Property is in a linear scale.
 	**/
 	public var gain(get, set):Float;
 
 	/**
-		The length of the audio, in milliseconds.
+		The current latency of this 'AudioSource'.
 	**/
-	public var length(get, set):Int;
+	public var latency(get, never):Float;
+
+	/**
+		The length of the audio, in milliseconds.
+		Setting this to 0 will set back to the original length.
+	**/
+	public var length(get, set):Float;
+
+	/**
+		In which audio playback time the audio will loop.
+	**/
+	public var loopTime(get, set):Float;
 
 	/**
 		The number of times the audio will loop. A value of `0` means the audio will not loop.
@@ -51,19 +63,42 @@ class AudioSource
 	public var loops(get, set):Int;
 
 	/**
+		The offset within the audio buffer to start playback, in milliseconds.
+		NOTE: The original documentation said it is in samples, but its actually in milliseconds.
+	**/
+	public var offset:Float;
+
+	/**
+		The stereo pan of the audio source.
+		Setting this will set the position back to default.
+	**/
+	public var pan(get, set):Float;
+
+	/**
 		The pitch of the audio. A value of `1.0` represents the default pitch.
 	**/
 	public var pitch(get, set):Float;
 
 	/**
-		The offset within the audio buffer to start playback, in samples.
+		An property if this 'AudioSource' is playing.
 	**/
-	public var offset:Int;
+	public var playing(get, never):Bool;
 
 	/**
 		The 3D position of the audio source, represented as a `Vector4`.
+		Setting this will set the pan back to default.
 	**/
 	public var position(get, set):Vector4;
+
+	/**
+		The current used cloned decoder to be used and played.
+	**/
+	public var decoder(default, null):Null<AudioDecoder>;
+
+	/**
+		An indicator if an decoder was cloned.
+	**/
+	public var standaloneDecoder(default, null):Bool;
 
 	@:noCompletion private var __backend:AudioSourceBackend;
 
@@ -74,24 +109,18 @@ class AudioSource
 		@param length The length of the audio to play, in milliseconds. If `null`, the full buffer is used.
 		@param loops The number of times to loop the audio. `0` means no looping.
 	**/
-	public function new(buffer:AudioBuffer = null, offset:Int = 0, length:Null<Int> = null, loops:Int = 0)
+	public function new(buffer:AudioBuffer = null, offset:Float = 0, length:Null<Int> = null, loops:Int = 0)
 	{
-		this.buffer = buffer;
-		this.offset = offset;
-
 		__backend = new AudioSourceBackend(this);
 
-		if (length != null && length != 0)
-		{
-			this.length = length;
-		}
-
+		this.buffer = buffer;
+		this.offset = offset;
+		if (length != null && length != 0) this.length = length;
 		this.loops = loops;
 
-		if (buffer != null)
-		{
-			init();
-		}
+		peaks = [];
+
+		if (buffer != null) __backend.load();
 	}
 
 	/**
@@ -99,12 +128,27 @@ class AudioSource
 	**/
 	public function dispose():Void
 	{
+		__backend.stop();
+		__backend.unload();
 		__backend.dispose();
 	}
 
-	@:noCompletion private function init():Void
+	/**
+		Loads the buffer to this 'AudioSource'.
+	**/
+	public function load():Void
 	{
-		__backend.init();
+		__backend.unload();
+		__backend.load();
+	}
+
+	/**
+		Unloads the current loaded buffer from this 'AudioSource'.
+	**/
+	public function unload():Void
+	{
+		__backend.stop();
+		__backend.unload();
 	}
 
 	/**
@@ -131,72 +175,107 @@ class AudioSource
 		__backend.stop();
 	}
 
+	@:noCompletion private inline function init():Void
+	{
+		__backend.load();
+	}
+
 	// Get & Set Methods
-	@:noCompletion private function get_currentTime():Int
+	@:noCompletion private inline function get_currentTime():Float
 	{
 		return __backend.getCurrentTime();
 	}
 
-	@:noCompletion private function set_currentTime(value:Int):Int
+	@:noCompletion private inline function set_currentTime(value:Float):Float
 	{
 		return __backend.setCurrentTime(value);
 	}
 
-	@:noCompletion private function get_gain():Float
+	@:noCompletion private inline function get_gain():Float
 	{
 		return __backend.getGain();
 	}
 
-	@:noCompletion private function set_gain(value:Float):Float
+	@:noCompletion private inline function set_gain(value:Float):Float
 	{
 		return __backend.setGain(value);
 	}
 
-	@:noCompletion private function get_length():Int
+	@:noCompletion private inline function get_latency():Float
+	{
+		return __backend.getLatency();
+	}
+
+	@:noCompletion private inline function get_length():Float
 	{
 		return __backend.getLength();
 	}
 
-	@:noCompletion private function set_length(value:Int):Int
+	@:noCompletion private inline function set_length(value:Float):Float
 	{
 		return __backend.setLength(value);
 	}
 
-	@:noCompletion private function get_loops():Int
+	@:noCompletion private inline function get_loopTime():Float
+	{
+		return __backend.getLoopTime();
+	}
+
+	@:noCompletion private inline function set_loopTime(value:Float):Float
+	{
+		return __backend.setLoopTime(value);
+	}
+
+	@:noCompletion private inline function get_loops():Int
 	{
 		return __backend.getLoops();
 	}
 
-	@:noCompletion private function set_loops(value:Int):Int
+	@:noCompletion private inline function set_loops(value:Int):Int
 	{
 		return __backend.setLoops(value);
 	}
 
-	@:noCompletion private function get_pitch():Float
+	@:noCompletion private inline function get_pan():Float
+	{
+		return __backend.getPan();
+	}
+
+	@:noCompletion private inline function set_pan(value:Float):Float
+	{
+		return __backend.setPan(value);
+	}
+
+	@:noCompletion private inline function get_pitch():Float
 	{
 		return __backend.getPitch();
 	}
 
-	@:noCompletion private function set_pitch(value:Float):Float
+	@:noCompletion private inline function set_pitch(value:Float):Float
 	{
 		return __backend.setPitch(value);
 	}
 
-	@:noCompletion private function get_position():Vector4
+	@:noCompletion private inline function get_playing():Bool
+	{
+		return __backend.getPlaying();
+	}
+
+	@:noCompletion private inline function get_position():Vector4
 	{
 		return __backend.getPosition();
 	}
 
-	@:noCompletion private function set_position(value:Vector4):Vector4
+	@:noCompletion private inline function set_position(value:Vector4):Vector4
 	{
 		return __backend.setPosition(value);
 	}
 }
 
-#if flash
-@:noCompletion private typedef AudioSourceBackend = lime._internal.backend.flash.FlashAudioSource;
+#if lime_openal
+@:noCompletion private typedef AudioSourceBackend = lime._internal.backend.native.NativeAudioSource;
 #elseif (js && html5)
 @:noCompletion private typedef AudioSourceBackend = lime._internal.backend.html5.HTML5AudioSource;
-#else
-@:noCompletion private typedef AudioSourceBackend = lime._internal.backend.native.NativeAudioSource;
+#elseif flash
+@:noCompletion private typedef AudioSourceBackend = lime._internal.backend.flash.FlashAudioSource;
 #end

@@ -1,7 +1,9 @@
 package lime.media;
 
+import haxe.Int64;
 import haxe.io.Bytes;
 import haxe.io.Path;
+import haxe.io.Input;
 import lime._internal.backend.native.NativeCFFI;
 import lime._internal.format.Base64;
 import lime.app.Future;
@@ -9,9 +11,14 @@ import lime.app.Promise;
 import lime.media.openal.AL;
 import lime.media.openal.ALBuffer;
 import lime.media.vorbis.VorbisFile;
+import lime.media.AudioManager;
 import lime.net.HTTPRequest;
+import lime.utils.ArrayBuffer;
 import lime.utils.Log;
 import lime.utils.UInt8Array;
+#if lime_vorbis
+import lime.media.decoders.VorbisDecoder;
+#end
 #if lime_howlerjs
 import lime.media.howlerjs.Howl;
 #end
@@ -21,8 +28,14 @@ import js.html.Audio;
 import flash.media.Sound;
 import flash.net.URLRequest;
 #end
+#if sys
+import sys.io.File;
+import sys.io.FileInput;
+import sys.io.FileSeek;
+#end
 
 @:access(lime._internal.backend.native.NativeCFFI)
+@:access(lime.media.AudioManager)
 @:access(lime.utils.Assets)
 #if hl
 @:keep
@@ -33,10 +46,10 @@ import flash.net.URLRequest;
 #end
 
 /**
-	The `AudioBuffer` class represents a buffer of audio data that can be played back using an `AudioSource`. 
+	The `AudioBuffer` class represents a buffer of audio data that can be played back using an `AudioSource`.
 	It supports a variety of audio formats and platforms, providing a consistent API for loading and managing audio data.
 
-	Depending on the platform, the audio backend may differ, but the class provides a unified interface for accessing 
+	Depending on the platform, the audio backend may differ, but the class provides a unified interface for accessing
 	audio data, whether it's stored in memory, loaded from a file, or streamed.
 
 	@see lime.media.AudioSource
@@ -59,6 +72,11 @@ class AudioBuffer
 	public var data:UInt8Array;
 
 	/**
+		The decoder for this audio buffer.
+	**/
+	public var decoder:AudioDecoder;
+
+	/**
 		The sample rate of the audio data, in Hz.
 	**/
 	public var sampleRate:Int;
@@ -69,7 +87,7 @@ class AudioBuffer
 	public var src(get, set):Dynamic;
 
 	@:noCompletion private var __srcAudio:#if (js && html5) Audio #else Dynamic #end;
-	@:noCompletion private var __srcBuffer:#if lime_cffi ALBuffer #else Dynamic #end;
+	@:noCompletion private var __srcBuffer:#if lime_openal ALBuffer #else Dynamic #end;
 	@:noCompletion private var __srcCustom:Dynamic;
 	@:noCompletion private var __srcHowl:#if lime_howlerjs Howl #else Dynamic #end;
 	@:noCompletion private var __srcSound:#if flash Sound #else Dynamic #end;
@@ -96,18 +114,72 @@ class AudioBuffer
 	**/
 	public function dispose():Void
 	{
+		if (decoder != null) decoder.dispose();
+		decoder = null;
 		#if (js && html5 && lime_howlerjs)
-		__srcHowl.unload();
+		if (__srcHowl != null) __srcHowl.unload();
+		__srcHowl = null;
 		#end
+		#if lime_openal
+		if (__srcBuffer != null) AL.deleteBuffer(__srcBuffer);
+		__srcBuffer = null;
+		#end
+	}
+
+	/**
+		Loads the audio buffer from the audio buffer decoder.
+
+		@param disposeDecoder Optional, should it disposes the decoder after this function.
+	**/
+	public function load(disposeDecoder = false)
+	{
+		if (decoder == null) return;
+
+		bitsPerSample = decoder.bitsPerSample;
+		channels = decoder.channels;
+		sampleRate = decoder.sampleRate;
+
+		data = new UInt8Array(Int64.toInt(decoder.total() * channels * (bitsPerSample >> 3)));
+		decoder.decode(data.buffer, 0, data.byteLength);
+		if (disposeDecoder) {
+			decoder.dispose();
+			decoder = null;
+		}
+	}
+
+	/**
+		Loads asynchronously the audio buffer from the audio bufferdecoder.
+
+		@param disposeDecoder Optional, should it disposes the decoder after this function.
+		@param onLoad The callback when its loaded.
+	**/
+	public function loadAsync(disposeDecoder = false, ?onLoad:AudioBuffer->Void)
+	{
+		if (decoder == null) return;
+
+		bitsPerSample = decoder.bitsPerSample;
+		channels = decoder.channels;
+		sampleRate = decoder.sampleRate;
+
+		data = new UInt8Array(Int64.toInt(decoder.total() * channels * (bitsPerSample >> 3)));
+		new Future<AudioBuffer>(() -> {
+			decoder.decode(data.buffer, 0, data.byteLength);
+			if (disposeDecoder) {
+				decoder.dispose();
+				decoder = null;
+			}
+			return this;
+		}, true).onComplete(onLoad);
 	}
 
 	/**
 		Creates an `AudioBuffer` from a Base64-encoded string.
 
 		@param base64String The Base64-encoded audio data.
+		@param stream Optional, should it return a streamable 'AudioBuffer' instead.
 		@return An `AudioBuffer` instance with the decoded audio data.
 	**/
-	public static function fromBase64(base64String:String):AudioBuffer
+	public static function fromBase64(base64String:String, ?stream:Bool):AudioBuffer
 	{
 		if (base64String == null) return null;
 
@@ -115,39 +187,21 @@ class AudioBuffer
 		// if base64String doesn't contain codec data, add it.
 		if (base64String.indexOf(",") == -1)
 		{
-			base64String = "data:" + __getCodec(Base64.decode(base64String)) + ";base64," + base64String;
+			final bytes = Base64.decode(base64String);
+			final codec = AudioCodec.fromHTML5(__getCodecFromBytes(bytes));
+			if (codec != null) base64String = "data:" + codec.toHTML5() + ";base64," + base64String;
 		}
 
 		var audioBuffer = new AudioBuffer();
-		audioBuffer.src = new Howl({src: [base64String], html5: true, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: [base64String], html5: true, preload: !stream});
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
-		#if !cs
-		// if base64String contains codec data, strip it then decode it.
-		var base64StringSplit = base64String.split(",");
-		var base64StringNoEncoding = base64StringSplit[base64StringSplit.length - 1];
-		var bytes:Bytes = Base64.decode(base64StringNoEncoding);
-		var audioBuffer = new AudioBuffer();
-		audioBuffer.data = new UInt8Array(Bytes.alloc(0));
+		var decoder = AudioDecoder.fromBase64(base64String);
 
-		return NativeCFFI.lime_audio_load_bytes(bytes, audioBuffer);
-		#else
-		// if base64String contains codec data, strip it then decode it.
-		var base64StringSplit = base64String.split(",");
-		var base64StringNoEncoding = base64StringSplit[base64StringSplit.length - 1];
-		var bytes:Bytes = Base64.decode(base64StringNoEncoding);
-		var data:Dynamic = NativeCFFI.lime_audio_load_bytes(bytes, null);
-
-		if (data != null)
+		if (decoder != null)
 		{
-			var audioBuffer = new AudioBuffer();
-			audioBuffer.bitsPerSample = data.bitsPerSample;
-			audioBuffer.channels = data.channels;
-			audioBuffer.data = new UInt8Array(@:privateAccess new Bytes(data.data.length, data.data.b));
-			audioBuffer.sampleRate = data.sampleRate;
-			return audioBuffer;
+			return AudioBuffer.fromDecoder(decoder, stream, true);
 		}
-		#end
 		#end
 
 		return null;
@@ -157,113 +211,116 @@ class AudioBuffer
 		Creates an `AudioBuffer` from a `Bytes` object.
 
 		@param bytes The `Bytes` object containing the audio data.
+		@param stream Optional, should it return a streamable 'AudioBuffer' instead.
 		@return An `AudioBuffer` instance with the decoded audio data.
 	**/
-	public static function fromBytes(bytes:Bytes):AudioBuffer
+	public static function fromBytes(bytes:Bytes, ?stream:Bool):AudioBuffer
 	{
 		if (bytes == null) return null;
 
 		#if (js && html5 && lime_howlerjs)
+		if (stream == null) stream = true;
 		var audioBuffer = new AudioBuffer();
-		audioBuffer.src = new Howl({src: ["data:" + __getCodec(bytes) + ";base64," + Base64.encode(bytes)], html5: true, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: ["data:" + AudioCodec.fromHTML5(__getCodecFromBytes(bytes)) + ";base64," + Base64.encode(bytes)],
+			html5: true, preload: !stream});
 
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
-		#if !cs
-		var audioBuffer = new AudioBuffer();
-		audioBuffer.data = new UInt8Array(Bytes.alloc(0));
+		var decoder = AudioDecoder.fromBytes(bytes);
 
-		return NativeCFFI.lime_audio_load_bytes(bytes, audioBuffer);
-		#else
-		var data:Dynamic = NativeCFFI.lime_audio_load_bytes(bytes, null);
-
-		if (data != null)
+		if (decoder != null)
 		{
-			var audioBuffer = new AudioBuffer();
-			audioBuffer.bitsPerSample = data.bitsPerSample;
-			audioBuffer.channels = data.channels;
-			audioBuffer.data = new UInt8Array(@:privateAccess new Bytes(data.data.length, data.data.b));
-			audioBuffer.sampleRate = data.sampleRate;
-			return audioBuffer;
+			return AudioBuffer.fromDecoder(decoder, stream, true);
 		}
-		#end
 		#end
 
 		return null;
+	}
+
+	/**
+		Creates an 'AudioBuffer' from a 'AudioDecoder' object.
+
+		@param audioDecoder The 'AudioDecoder' object.
+		@param stream Optional, should it return a streamable 'AudioBuffer' instead.
+		@param autoDisposeDecoder Optional, should it disposes the decoder after this function.
+		@return An `AudioBuffer` instance with the decoded audio data.
+	**/
+	public static function fromDecoder(audioDecoder:AudioDecoder, stream = false, autoDisposeDecoder:Bool = false):AudioBuffer
+	{
+		var audioBuffer = new AudioBuffer();
+		audioBuffer.decoder = audioDecoder;
+
+		if (!stream || !audioDecoder.seekable())
+		{
+			audioBuffer.load(autoDisposeDecoder);
+		}
+		else
+		{
+			audioBuffer.bitsPerSample = audioDecoder.bitsPerSample;
+			audioBuffer.channels = audioDecoder.channels;
+			audioBuffer.sampleRate = audioDecoder.sampleRate;
+		}
+
+		return audioBuffer;
 	}
 
 	/**
 		Creates an `AudioBuffer` from a file.
 
 		@param path The file path to the audio data.
+		@param stream Optional, should it return a streamable 'AudioBuffer' instead.
+		@param howlHtml5 html5 only. Optional, should it load in html5 audio instead of howler's.
 		@return An `AudioBuffer` instance with the audio data loaded from the file.
 	**/
-	public static function fromFile(path:String):AudioBuffer
+	public static function fromFile(path:String, ?stream:Bool #if (js && html5 && lime_howlerjs), ?howlHtml5 = false #end):AudioBuffer
 	{
 		if (path == null) return null;
 
 		#if (js && html5 && lime_howlerjs)
 		var audioBuffer = new AudioBuffer();
 
+		if (stream == null) stream = true;
 		#if force_html5_audio
-		audioBuffer.__srcHowl = new Howl({src: [path], html5: true, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: [path], html5: true, preload: !stream});
 		#else
-		audioBuffer.__srcHowl = new Howl({src: [path], preload: false});
+		audioBuffer.__srcHowl = new Howl({src: [path], html5: howlHtml5, preload: !stream});
 		#end
 
 		return audioBuffer;
 		#elseif flash
-		switch (Path.extension(path))
-		{
-			case "ogg", "wav":
-				return null;
-			default:
-		}
-
 		var audioBuffer = new AudioBuffer();
 		audioBuffer.__srcSound = new Sound(new URLRequest(path));
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
-		#if !cs
-		var audioBuffer = new AudioBuffer();
-		audioBuffer.data = new UInt8Array(Bytes.alloc(0));
+		var decoder = AudioDecoder.fromFile(path);
 
-		return NativeCFFI.lime_audio_load_file(path, audioBuffer);
-		#else
-		var data:Dynamic = NativeCFFI.lime_audio_load_file(path, null);
-
-		if (data != null)
+		if (decoder != null)
 		{
-			var audioBuffer = new AudioBuffer();
-			audioBuffer.bitsPerSample = data.bitsPerSample;
-			audioBuffer.channels = data.channels;
-			audioBuffer.data = new UInt8Array(@:privateAccess new Bytes(data.data.length, data.data.b));
-			audioBuffer.sampleRate = data.sampleRate;
-			return audioBuffer;
+			return AudioBuffer.fromDecoder(decoder, stream, true);
 		}
+		#end
 
 		return null;
-		#end
-		#else
-		return null;
-		#end
 	}
 
 	/**
 		Creates an `AudioBuffer` from an array of file paths.
 
 		@param paths An array of file paths to search for audio data.
+		@param stream Optional, should it return a streamable 'AudioBuffer' instead.
+		@param howlHtml5 html5 only. Optional, should it load in html5 audio instead of howler's.
 		@return An `AudioBuffer` instance with the audio data loaded from the first valid file found.
 	**/
-	public static function fromFiles(paths:Array<String>):AudioBuffer
+	public static function fromFiles(paths:Array<String>, ?stream:Bool #if (js && html5 && lime_howlerjs), ?howlHtml5 = false #end):AudioBuffer
 	{
 		#if (js && html5 && lime_howlerjs)
 		var audioBuffer = new AudioBuffer();
 
+		if (stream == null) stream = true;
 		#if force_html5_audio
-		audioBuffer.__srcHowl = new Howl({src: paths, html5: true, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: paths, html5: true, preload: !stream});
 		#else
-		audioBuffer.__srcHowl = new Howl({src: paths, preload: false});
+		audioBuffer.__srcHowl = new Howl({src: paths, html5: howlHtml5, preload: !stream});
 		#end
 
 		return audioBuffer;
@@ -272,7 +329,7 @@ class AudioBuffer
 
 		for (path in paths)
 		{
-			buffer = AudioBuffer.fromFile(path);
+			buffer = AudioBuffer.fromFile(path, stream);
 			if (buffer != null) break;
 		}
 
@@ -284,26 +341,21 @@ class AudioBuffer
 		Creates an `AudioBuffer` from a `VorbisFile`.
 
 		@param vorbisFile The `VorbisFile` object containing the audio data.
+		@param stream Optional, should it return a streamable 'AudioBuffer' instead.
 		@return An `AudioBuffer` instance with the decoded audio data.
 	**/
 	#if lime_vorbis
-		
-	public static function fromVorbisFile(vorbisFile:VorbisFile):AudioBuffer
+	public static function fromVorbisFile(vorbisFile:VorbisFile, ?stream:Bool):AudioBuffer
 	{
 		if (vorbisFile == null) return null;
 
-		var info = vorbisFile.info();
-
-		var audioBuffer = new AudioBuffer();
-		audioBuffer.channels = info.channels;
-		audioBuffer.sampleRate = info.rate;
-		audioBuffer.bitsPerSample = 16;
+		var audioDecoder = VorbisDecoder.fromVorbisFile(vorbisFile);
+		var audioBuffer = AudioBuffer.fromDecoder(audioDecoder, stream);
 		audioBuffer.__srcVorbisFile = vorbisFile;
-
 		return audioBuffer;
 	}
 	#else
-	public static function fromVorbisFile(vorbisFile:Dynamic):AudioBuffer
+	public static function fromVorbisFile(vorbisFile:Dynamic, ?stream:Bool):AudioBuffer
 	{
 		return null;
 	}
@@ -362,20 +414,14 @@ class AudioBuffer
 
 		return promise.future;
 		#else
-		// TODO: Streaming
+		var decoder = AudioDecoder.fromFile(path);
 
-		var request = new HTTPRequest<AudioBuffer>();
-		return request.load(path).then(function(buffer)
+		if (decoder != null)
 		{
-			if (buffer != null)
-			{
-				return Future.withValue(buffer);
-			}
-			else
-			{
-				return cast Future.withError("");
-			}
-		});
+			return AudioBuffer.loadFromDecoder(decoder, true);
+		}
+
+		return cast Future.withError(null);
 		#end
 	}
 
@@ -413,31 +459,161 @@ class AudioBuffer
 
 		return promise.future;
 		#else
-		return new Future(fromFiles.bind(paths), true);
+		for (path in paths)
+		{
+			var decoder = AudioDecoder.fromFile(path);
+			if (decoder != null)
+			{
+				return AudioBuffer.loadFromDecoder(decoder, true);
+			}
+		}
+
+		return cast Future.withError(null);
 		#end
 	}
 
-	private static function __getCodec(bytes:Bytes):String
-	{
-		var signature = bytes.getString(0, 4);
+	/**
+		Asynchronously loads an 'AudioBuffer' from 'AudioDecoder'.
 
-		switch (signature)
+		@param audioDecoder The 'AudioDecoder' object.
+		@param autoDisposeDecoder Optional, should it disposes the decoder after this function.
+		@return A 'Future' that resolves to the loaded 'AudioBuffer'.
+	**/
+	public static function loadFromDecoder(audioDecoder:AudioDecoder, autoDisposeDecoder = false):Future<AudioBuffer>
+	{
+		var promise = new Promise<AudioBuffer>();
+		var audioBuffer = new AudioBuffer();
+		audioBuffer.decoder = audioDecoder;
+		audioBuffer.loadAsync(autoDisposeDecoder, promise.complete);
+		return promise.future;
+	}
+
+	/**
+		Get the codec that is in the audio resource.
+
+		@param resource Any data to interpret as audio data.
+		@return AudioCodec
+	**/
+	public static function getCodec(resource:Dynamic):AudioCodec
+	{
+		if (resource is Bytes)
 		{
-			case "OggS":
-				return "audio/ogg";
-			case "fLaC":
-				return "audio/flac";
-			case "RIFF" if (bytes.getString(8, 4) == "WAVE"):
-				return "audio/wav";
-			default:
-				switch ([bytes.get(0), bytes.get(1), bytes.get(2)])
-				{
-					case [73, 68, 51] | [255, 251, _] | [255, 250, _] | [255, 243, _]: return "audio/mp3";
-					default:
-				}
+			return __getCodecFromBytes(cast resource);
+		}
+		#if sys
+		else if (resource is String)
+		{
+			return __getCodecFromInput(File.read(cast resource, true));
+		}
+		else if (resource is FileInput)
+		{
+			cast(resource, FileInput).seek(0, SeekBegin);
+			return __getCodecFromInput(cast resource);
+		}
+		#end
+		else if (resource is Input)
+		{
+			return __getCodecFromInput(cast resource);
+		}
+		return null;
+	}
+
+	
+	@:noCompletion private static function __getALFormat(bitsPerSample:Int, channels:Int):Int
+	{
+		#if (lime_openal && !macro)
+		if (channels > 2 && AudioManager.__moreFormatsSupported) {
+			if (channels == 3) return bitsPerSample == 32 ? AL.FORMAT_REAR32 : (bitsPerSample == 16 ? AL.FORMAT_REAR16 : AL.FORMAT_REAR8);
+			else if (channels == 4) return bitsPerSample == 32 ? AL.FORMAT_QUAD32 : (bitsPerSample == 16 ? AL.FORMAT_QUAD16 : AL.FORMAT_QUAD8);
+			else if (channels == 6) return bitsPerSample == 32 ? AL.FORMAT_51CHN32 : (bitsPerSample == 16 ? AL.FORMAT_51CHN16 : AL.FORMAT_51CHN8);
+			else if (channels == 7) return bitsPerSample == 32 ? AL.FORMAT_61CHN32 : (bitsPerSample == 16 ? AL.FORMAT_61CHN16 : AL.FORMAT_61CHN8);
+			else if (channels == 8) return bitsPerSample == 32 ? AL.FORMAT_71CHN32 : (bitsPerSample == 16 ? AL.FORMAT_71CHN16 : AL.FORMAT_71CHN8);
+			else return 0;
+		}
+		else if (bitsPerSample == 32) return channels == 2 ? AL.FORMAT_STEREO32 : channels == 1 ? AL.FORMAT_MONO32 : 0;
+		else if (channels == 2) return bitsPerSample == 16 ? AL.FORMAT_STEREO16 : bitsPerSample == 8 ? AL.FORMAT_STEREO8 : 0;
+		else if (channels == 1) return bitsPerSample == 16 ? AL.FORMAT_MONO16 : bitsPerSample == 8 ? AL.FORMAT_MONO8 : 0;
+		#end
+		return 0;
+	}
+
+	@:noCompletion private static function __getCodecFromBytes(bytes:Bytes):AudioCodec
+	{
+		try
+		{
+			var signature = bytes.getString(0, 4);
+
+			switch (signature) {
+				case "OggS": return OGG;
+				case "fLaC": return FLAC;
+				case "RIFF":
+					var fmt = bytes.getString(8, 4);
+					if (fmt == "WAVE") return WAVE;
+			}
+
+			switch (signature.substr(0, 3)) {
+				case "ID3": return MP3;
+			}
+		}
+		catch (e:Dynamic)
+		{
+			// if the bytes don't represent a valid UTF-8 string, getString()
+			// may throw an exception. in that case, we expect to end up in
+			// the default switch case below where it tries to detect MP3.
 		}
 
-		Log.error("Unsupported sound format");
+		if (bytes.get(0) == 255) {
+			var b = bytes.get(1);
+			if (b == 251 || b == 250 || b == 243) return MP3;
+		}
+
+		return null;
+	}
+
+	@:noCompletion private static function __getCodecFromInput(input:Input):AudioCodec
+	{
+		var bytes = Bytes.alloc(4);
+		input.readBytes(bytes, 0, 4);
+
+		try
+		{
+			var signature = bytes.getString(0, 4);
+
+			switch (signature) {
+				case "OggS": return OGG;
+				case "fLaC": return FLAC;
+				case "RIFF":
+					#if sys
+					if (input is FileInput)
+					{
+						cast(input, FileInput).seek(4, SeekCur);
+					}
+					else
+					#end
+					{
+						for (i in 0...4) input.readByte();
+					}
+
+					var fmt = input.readString(4);
+					if (fmt == "WAVE") return WAVE;
+			}
+
+			switch (signature.substr(0, 3)) {
+				case "ID3": return MP3;
+			}
+		}
+		catch (e:Dynamic)
+		{
+			// if the bytes don't represent a valid UTF-8 string, getString()
+			// may throw an exception. in that case, we expect to end up in
+			// the default switch case below where it tries to detect MP3.
+		}
+
+		if (bytes.get(0) == 255) {
+			var b = bytes.get(1);
+			if (b == 251 || b == 250 || b == 243) return MP3;
+		}
+
 		return null;
 	}
 
@@ -452,8 +628,6 @@ class AudioBuffer
 		#end
 		#elseif flash
 		return __srcSound;
-		#elseif lime_vorbis
-		return __srcVorbisFile;
 		#else
 		return __srcCustom;
 		#end
@@ -469,8 +643,6 @@ class AudioBuffer
 		#end
 		#elseif flash
 		return __srcSound = value;
-		#elseif lime_vorbis
-		return __srcVorbisFile = value;
 		#else
 		return __srcCustom = value;
 		#end
