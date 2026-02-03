@@ -8,10 +8,7 @@ import lime.media.AudioDecoder;
 
 #if (lime_cffi && lime_vorbis)
 import lime._internal.backend.native.NativeCFFI;
-import lime.media.vorbis.Vorbis;
 import lime.media.vorbis.VorbisFile;
-import lime.system.Endian;
-import lime.system.System;
 
 @:access(lime._internal.backend.native.NativeCFFI)
 @:access(lime.media.vorbis.VorbisFile)
@@ -109,39 +106,9 @@ class VorbisDecoder extends AudioDecoder
 	override function decode(buffer:ArrayBuffer, pos:Int, len:Int):Int
 	{
 		#if (lime_cffi && lime_vorbis)
-		// TODO: Implement this in project instead.
 		pos = NativeCFFI.lime_vorbis_file_decode(handle, buffer, pos, len, bitsPerSample >> 3);
 		eof = pos < len;
 		return pos;
-		/*
-		var isBigEndian = System.endianness == Endian.BIG_ENDIAN;
-		var size = 0, result:Int;
-		while (size < len)
-		{
-			var data = NativeCFFI.lime_vorbis_file_read(handle, buffer, pos, len - size, isBigEndian, bitsPerSample >> 3, true);
-			result = data.returnValue;
-
-			if (result == Vorbis.HOLE) continue;
-			else if (result <= Vorbis.EREAD)
-			{
-				eof = true;
-				return result;
-			}
-			else if (result == 0)
-			{
-				eof = true;
-				break;
-			}
-			else
-			{
-				eof = false;
-				size += result;
-				pos += result;
-			}
-		}
-
-		return size;
-		*/
 		#else
 		return 0;
 		#end
