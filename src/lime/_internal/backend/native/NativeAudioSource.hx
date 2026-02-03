@@ -93,6 +93,8 @@ class NativeAudioSource
 
 	private var standaloneBuffer:Bool;
 	private var buffer:ALBuffer;
+	private var standaloneDecoder:Bool;
+	private var decoder:AudioDecoder;
 	private var anglesArray:Array<Float>;
 	private var loopPoints:Array<Int>;
 
@@ -153,9 +155,9 @@ class NativeAudioSource
 			mutex.acquire();
 
 			samples = Int64.toInt(parent.buffer.decoder.total());
-			parent.decoder = parent.buffer.decoder.clone();
-			parent.standaloneDecoder = parent.decoder != null;
-			if (!parent.standaloneDecoder) parent.decoder = parent.buffer.decoder;
+			decoder = parent.buffer.decoder.clone();
+			standaloneDecoder = decoder != null;
+			if (!standaloneDecoder) decoder = parent.buffer.decoder;
 
 			buffers = AL.genBuffers(STREAM_FLUSH_BUFFERS);
 			bufferLen = (STREAM_BUFFER_SAMPLES * parent.buffer.channels) * (parent.buffer.bitsPerSample >> 3);
@@ -232,9 +234,9 @@ class NativeAudioSource
 				internalQueuedBuffers = queuedBuffers = filledBuffers = 0;
 				streamMutex.release();
 
-				if (parent.decoder != null && parent.standaloneDecoder) parent.decoder.dispose();
-				parent.decoder = null;
-				parent.standaloneDecoder = false;
+				if (decoder != null && standaloneDecoder) decoder.dispose();
+				decoder = null;
+				standaloneDecoder = false;
 			}
 			else
 			{
@@ -666,21 +668,21 @@ class NativeAudioSource
 
 	function readToBufferData(data:ArrayBufferView, currentPCM:Int):Int
 	{
-		if (parent.decoder.eof || currentPCM >= loopPoints[1])
+		if (decoder.eof || currentPCM >= loopPoints[1])
 		{
-			if (streamEnded = loops <= streamLoops || !parent.decoder.seek(loopPoints[0])) return 0;
+			if (streamEnded = loops <= streamLoops || !decoder.seek(loopPoints[0])) return 0;
 			streamLoops++;
 		}
 
 		var total = 0, len:Int;
-		while (!(streamEnded = parent.decoder.eof))
+		while (!(streamEnded = decoder.eof))
 		{
 			if ((len = (loopPoints[1] - currentPCM) * parent.buffer.channels * (parent.buffer.bitsPerSample >> 3)) <= (currentPCM = bufferLen - total))
 			{
-				total += parent.decoder.decode(data.buffer, total, len);
+				total += decoder.decode(data.buffer, total, len);
 				if (loops > streamLoops)
 				{
-					parent.decoder.seek(currentPCM = loopPoints[0]);
+					decoder.seek(currentPCM = loopPoints[0]);
 					streamLoops++;
 				}
 				else
@@ -691,7 +693,7 @@ class NativeAudioSource
 			}
 			else
 			{
-				return total += parent.decoder.decode(data.buffer, total, currentPCM);
+				return total += decoder.decode(data.buffer, total, currentPCM);
 			}
 		}
 		return total;
@@ -702,7 +704,7 @@ class NativeAudioSource
 		final max = STREAM_MAX_BUFFERS - 1;
 		var i:Int, j:Int, data:ArrayBufferView, pcm:Int, decoded:Int;
 		while (n-- > 0 && !(streamEnded = !streaming) &&
-			(decoded = readToBufferData(data = bufferViews[(i = max - filledBuffers) < 0 ? 0 : i], pcm = Int64.toInt(parent.decoder.tell()))) > 0)
+			(decoded = readToBufferData(data = bufferViews[(i = max - filledBuffers) < 0 ? 0 : i], pcm = Int64.toInt(decoder.tell()))) > 0)
 		{
 			j = i;
 			while (i < max)
@@ -757,7 +759,7 @@ class NativeAudioSource
 		force = streaming;
 		streaming = true;
 		internalQueuedBuffers = queuedBuffers = filledBuffers = streamLoops = nextBuffer = 0;
-		parent.decoder.seek(sample);
+		decoder.seek(sample);
 		fillBuffers(n);
 		flushBuffers();
 		streaming = force;

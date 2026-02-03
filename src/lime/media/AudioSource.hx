@@ -90,16 +90,6 @@ class AudioSource
 	**/
 	public var position(get, set):Vector4;
 
-	/**
-		The current used cloned decoder to be used and played.
-	**/
-	public var decoder(default, null):Null<AudioDecoder>;
-
-	/**
-		An indicator if an decoder was cloned.
-	**/
-	public var standaloneDecoder(default, null):Bool;
-
 	@:noCompletion private var __backend:AudioSourceBackend;
 
 	/**
