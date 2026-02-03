@@ -52,7 +52,15 @@ class HTML5AudioSource
 		#end
 	}
 
-	public function dispose():Void {}
+	public function dispose():Void
+	{
+		#if lime_howlerjs
+		dataArrayLeft = null;
+		dataArrayRight = null;
+		mins = null;
+		maxs = null;
+		#end
+	}
 
 	public function load():Void
 	{
@@ -66,18 +74,25 @@ class HTML5AudioSource
 	{
 		// Howl sounds are automatically unloaded if it has stopped.
 		#if lime_howlerjs
-		if (channelSplitter != null) channelSplitter.disconnect();
-		if (analyserLeft != null) analyserLeft.disconnect();
-		if (analyserRight != null) analyserRight.disconnect();
-		channelSplitter = null;
-		analyserLeft = null;
-		analyserRight = null;
+		disposeAnalyser();
 		howl = null;
 		id = -1;
 		#end
 		length = 0;
 		loopTime = 0;
 		pauseTime = 0;
+	}
+
+	private function disposeAnalyser():Void
+	{
+		#if lime_howlerjs
+		if (channelSplitter != null) channelSplitter.disconnect();
+		if (analyserLeft != null) analyserLeft.disconnect();
+		if (analyserRight != null) analyserRight.disconnect();
+		channelSplitter = null;
+		analyserLeft = null;
+		analyserRight = null;
+		#end
 	}
 
 	public function play():Void
@@ -87,25 +102,17 @@ class HTML5AudioSource
 
 		completed = false;
 
-		var pos = (pauseTime + parent.offset) / 1000;
-		if (id == -1)
-		{
-			id = howl.play();
-			updateLoop();
-			howl.volume(gain, id);
-			howl.seek(pos, id);
-
-			// nvm, still causes muffling somehow, disable position entirely.
-			// https://github.com/goldfire/howler.js/issues/112
-			//howl.pannerAttr({distanceModel: "equalpower"}, id);	
-		}
+		var prevId = id;
+		if (prevId == -1) id = howl.play();
 		else
 		{
-			updateLoop();
-			howl.volume(gain, id);
-			howl.seek(pos, id);
-			howl.play(id);
+			id = howl.play(prevId);
+			if (prevId != id) disposeAnalyser();
 		}
+
+		updateLoop();
+		howl.volume(gain, id);
+		howl.seek((pauseTime + parent.offset) / 1000, id);
 
 		resetTimer(Std.int((length - pauseTime - parent.offset) / howl.rate(id)));
 		#end
