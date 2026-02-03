@@ -17,6 +17,7 @@ import lime.media.AudioManager;
 import lime.media.AudioSource;
 import lime.utils.ArrayBuffer;
 import lime.utils.ArrayBufferView;
+import lime.utils.ArrayBufferView.ArrayBufferIO;
 import lime.utils.UInt8Array;
 
 @:access(haxe.Timer)
@@ -81,6 +82,7 @@ class NativeAudioSource
 	private var format:Int;
 	private var loops:Int;
 	private var pauseTime:Float;
+	private var peaks:Array<Float>;
 	private var playing:Bool;
 	private var position:Vector4;
 	private var samples:Int;
@@ -97,6 +99,8 @@ class NativeAudioSource
 	private var decoder:AudioDecoder;
 	private var anglesArray:Array<Float>;
 	private var loopPoints:Array<Int>;
+	private var mins:Array<Int>;
+	private var maxs:Array<Int>;
 
 	public var bufferLen:Int;
 	public var queuedBuffers:Int;
@@ -136,6 +140,8 @@ class NativeAudioSource
 	{
 		anglesArray = null;
 		loopPoints = null;
+		mins = null;
+		maxs = null;
 
 		if (source != null) AL.deleteSource(source);
 		source = null;
@@ -871,4 +877,109 @@ class NativeAudioSource
 		}
 	}
 
+	public function getPeaks(offsetMs:Float):Array<Float>
+	{
+		if (peaks == null) peaks = [];
+		if (!playing)
+		{
+			for (i in 0...peaks.length) peaks[i] = 0;
+			return peaks;
+		}
+		if (parent.buffer.channels != peaks.length) peaks.resize(parent.buffer.channels);
+
+		inline function nothing()
+		{
+			if (streamed) mutex.release();
+			for (i in 0...parent.buffer.channels) peaks[i] = 0;
+			return peaks;
+		}
+
+		var i = 0, buffer:ArrayBuffer, bufferLen:Int;
+		if (streamed)
+		{
+			mutex.acquire();
+			if (filledBuffers == 0) return nothing();
+
+			i = STREAM_MAX_BUFFERS - queuedBuffers;
+			buffer = bufferViews[i].buffer;
+			bufferLen = bufferLens[i];
+		}
+		else
+		{
+			buffer = parent.buffer.data.buffer;
+			bufferLen = buffer.length;
+		}
+
+		var byteSize = 1 << parent.buffer.bitsPerSample;
+		var wordSize = parent.buffer.bitsPerSample >> 3;
+		var samplesToDo = parent.buffer.sampleRate >> 4;
+		var pos = (AL.getSourcei(source, AL.SAMPLE_OFFSET) + Std.int(offsetMs / 1000.0 * parent.buffer.sampleRate) - samplesToDo);
+		pos *= parent.buffer.channels * wordSize;
+
+		if (pos < 0)
+		{
+			if (samplesToDo < pos) return nothing();
+			samplesToDo -= pos;
+			do {
+				if (i == 0) pos = 0;
+				else
+				{
+					buffer = bufferViews[--i].buffer;
+					bufferLen = bufferLens[i];
+					pos += bufferLen;
+				}
+			} while (pos < 0);
+		}
+		else if (pos >= bufferLen)
+		{
+			if (!streamed) return nothing();
+			do {
+				if (++i >= bufferLens.length) return nothing();
+
+				pos -= bufferLen;
+				buffer = bufferViews[i].buffer;
+				bufferLen = bufferLens[i];
+			} while (pos >= bufferLen);
+		}
+
+		if (mins == null)
+		{
+			mins = [for (i in 0...parent.buffer.channels) -0x7FFFFFFF];
+			maxs = [for (i in 0...parent.buffer.channels) -0x7FFFFFFF];
+		}
+		else
+		{
+			for (i in 0...parent.buffer.channels) maxs[i] = mins[i] = -0x7FFFFFFF;
+		}
+
+		var c = 0, b:Int;
+		while (samplesToDo > 0) {
+			if (wordSize == 2) b = ArrayBufferIO.getInt16(buffer, pos);
+			else if (wordSize == 3)
+			{
+				b = ArrayBufferIO.getUint16(buffer, pos) | (buffer.get(pos + 2) << 16);
+				if (b & 0x800000 != 0) b -= 0x1000000;
+			}
+			else if (wordSize == 4) b = ArrayBufferIO.getInt32(buffer, pos);
+			else b = ArrayBufferIO.getUint8(buffer, pos) - 128;
+
+			((b > maxs[c]) ? (maxs[c] = b) : (if (-b > mins[c]) (mins[c] = -b)));
+			if ((pos += wordSize) >= bufferLen)
+			{
+				if (!streamed || ++i >= bufferLens.length) break;
+				pos = 0;
+				buffer = bufferViews[i].buffer;
+				bufferLen = bufferLens[i];
+			}
+			else if (++c == parent.buffer.channels)
+			{
+				c = 0;
+				samplesToDo--;
+			}
+		}
+
+		if (streamed) mutex.release();
+		for (i in 0...parent.buffer.channels) peaks[i] = (maxs[i] + mins[i]) / byteSize;
+		return peaks;
+	}
 }

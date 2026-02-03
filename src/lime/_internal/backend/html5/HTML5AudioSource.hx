@@ -3,7 +3,12 @@ package lime._internal.backend.html5;
 import lime.math.Vector4;
 import lime.media.AudioSource;
 #if lime_howlerjs
+import js.html.audio.AnalyserNode;
+import js.html.audio.ChannelSplitterNode;
+import js.html.MediaElement;
+import js.lib.Float32Array;
 import lime.media.howlerjs.Howl;
+import lime.media.howlerjs.Howler;
 #end
 
 @:access(lime.media.AudioBuffer)
@@ -18,12 +23,20 @@ class HTML5AudioSource
 	private var loops:Int;
 	private var pan:Float;
 	private var pauseTime:Float;
+	private var peaks:Array<Float>;
 	private var pitch:Float;
 	private var position:Vector4;
 	#if lime_howlerjs
 	public var id:Int;
 	public var howl:Howl;
 
+	private var analyserLeft:AnalyserNode;
+	private var analyserRight:AnalyserNode;
+	private var channelSplitter:ChannelSplitterNode;
+	private var dataArrayLeft:Float32Array;
+	private var dataArrayRight:Float32Array;
+	private var mins:Array<Float>;
+	private var maxs:Array<Float>;
 	private var timerID:Int;
 	#end
 
@@ -51,8 +64,14 @@ class HTML5AudioSource
 
 	public function unload():Void
 	{
-		// There is no unloading a audio id object in howlerjs as far as i know.
+		// Howl sounds are automatically unloaded if it has stopped.
 		#if lime_howlerjs
+		if (channelSplitter != null) channelSplitter.disconnect();
+		if (analyserLeft != null) analyserLeft.disconnect();
+		if (analyserRight != null) analyserRight.disconnect();
+		channelSplitter = null;
+		analyserLeft = null;
+		analyserRight = null;
 		howl = null;
 		id = -1;
 		#end
@@ -359,5 +378,75 @@ class HTML5AudioSource
 		#end*/
 
 		return position;
+	}
+
+	public function getPeaks(offsetMs:Float):Array<Float>
+	{
+		if (peaks == null) peaks = [0, 0];
+
+		#if lime_howlerjs
+		if (howl == null || id == -1 || !howl.playing(id))
+		{		
+			for (i in 0...2) peaks[i] = 0;
+			return peaks;
+		}
+
+		if (channelSplitter == null)
+		{
+			var node = untyped howl._soundById(id)._node;
+
+			//html5 audios is extremely buggy.
+			/*
+			var isHTML5 = (node is MediaElement);
+			if (isHTML5) node = Howler.ctx.createMediaElementSource(untyped node);
+			*/
+			if ((node is MediaElement))
+			{
+				for (i in 0...2) peaks[i] = 0;
+				return peaks;
+			}
+
+			var ctx = untyped node.context;
+			if (untyped node.bufferSource)
+			{
+				node = untyped node.bufferSource;
+			}
+
+			channelSplitter = new ChannelSplitterNode(untyped ctx, {numberOfOutputs: 2});
+			analyserLeft = new AnalyserNode(untyped ctx);
+			analyserRight = new AnalyserNode(untyped ctx);
+			analyserLeft.fftSize = analyserRight.fftSize = 2048;
+			analyserLeft.maxDecibels = analyserRight.maxDecibels = 0;
+			analyserLeft.minDecibels = analyserRight.minDecibels = -120;
+
+			untyped node.connect(channelSplitter);
+			channelSplitter.connect(analyserLeft, 0);
+			channelSplitter.connect(analyserRight, 1);
+
+			//if (isHTML5) channelSplitter.connect(untyped Howler.ctx.destination);
+		}
+
+		if (dataArrayLeft == null) dataArrayLeft = new Float32Array(2048);
+		if (dataArrayRight == null) dataArrayRight = new Float32Array(2048);
+
+		analyserLeft.getFloatTimeDomainData(dataArrayLeft);
+		analyserRight.getFloatTimeDomainData(dataArrayRight);
+
+		if (mins == null)
+		{
+			mins = [for (i in 0...2) -1];
+			maxs = [for (i in 0...2) -1];
+		}
+		else
+		{
+			for (i in 0...2) maxs[i] = mins[i] = -1;
+		}
+
+		for (v in dataArrayLeft) ((v > maxs[0]) ? (maxs[0] = v) : (if (-v > mins[0]) (mins[0] = -v)));
+		for (v in dataArrayRight) ((v > maxs[1]) ? (maxs[1] = v) : (if (-v > mins[1]) (mins[1] = -v)));
+
+		for (i in 0...2) peaks[i] = (maxs[i] + mins[i]) * 0.5;
+		#end
+		return peaks;
 	}
 }

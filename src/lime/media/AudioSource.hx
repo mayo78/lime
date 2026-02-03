@@ -75,6 +75,12 @@ class AudioSource
 	public var pan(get, set):Float;
 
 	/**
+		The current peak or amplitude (signal level) of the channels seperated to elements in array,
+		from 0 (silent) to 1 (full).
+	**/
+	public var peaks(get, never):Array<Float>;
+
+	/**
 		The pitch of the audio. A value of `1.0` represents the default pitch.
 	**/
 	public var pitch(get, set):Float;
@@ -107,8 +113,6 @@ class AudioSource
 		this.offset = offset;
 		if (length != null && length != 0) this.length = length;
 		this.loops = loops;
-
-		peaks = [];
 
 		if (buffer != null) __backend.load();
 	}
@@ -234,6 +238,11 @@ class AudioSource
 	@:noCompletion private inline function set_pan(value:Float):Float
 	{
 		return __backend.setPan(value);
+	}
+
+	@:noCompletion private inline function get_peaks():Array<Float>
+	{
+		return __backend.getPeaks(0);
 	}
 
 	@:noCompletion private inline function get_pitch():Float

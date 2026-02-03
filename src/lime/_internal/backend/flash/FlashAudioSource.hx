@@ -18,6 +18,7 @@ class FlashAudioSource
 	private var loopTime:Float;
 	private var loops:Int;
 	private var pauseTime:Float;
+	private var peaks:Array<Float>;
 	private var playing:Bool;
 	private var position:Vector4;
 	#if flash
@@ -285,6 +286,19 @@ class FlashAudioSource
 		}
 		#end
 		return value;
+	}
+
+	public function getPeaks(offsetMs:Float):Array<Float>
+	{
+		if (peaks == null) peaks = [0, 0];
+		#if flash
+		if (playing && channel != null)
+		{
+			peaks[0] = channel.leftPeak;
+			peaks[1] = channel.rightPeak;
+		}
+		#end
+		return peaks;
 	}
 
 	public function getPitch():Float
