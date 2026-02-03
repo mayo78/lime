@@ -177,9 +177,10 @@ class AudioBuffer
 
 		@param base64String The Base64-encoded audio data.
 		@param stream Optional, should it return a streamable 'AudioBuffer' instead.
+		@param howlHtml5 html5 only. Optional, should it load in html5 audio instead of howler's.
 		@return An `AudioBuffer` instance with the decoded audio data.
 	**/
-	public static function fromBase64(base64String:String, ?stream:Bool):AudioBuffer
+	public static function fromBase64(base64String:String, ?stream:Bool #if (js && html5 && lime_howlerjs), ?howlHtml5 = false #end):AudioBuffer
 	{
 		if (base64String == null) return null;
 
@@ -193,7 +194,7 @@ class AudioBuffer
 		}
 
 		var audioBuffer = new AudioBuffer();
-		audioBuffer.__srcHowl = new Howl({src: [base64String], html5: true, preload: !stream});
+		audioBuffer.__srcHowl = new Howl({src: [base64String], html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
 		var decoder = AudioDecoder.fromBase64(base64String);
@@ -212,9 +213,10 @@ class AudioBuffer
 
 		@param bytes The `Bytes` object containing the audio data.
 		@param stream Optional, should it return a streamable 'AudioBuffer' instead.
+		@param howlHtml5 html5 only. Optional, should it load in html5 audio instead of howler's.
 		@return An `AudioBuffer` instance with the decoded audio data.
 	**/
-	public static function fromBytes(bytes:Bytes, ?stream:Bool):AudioBuffer
+	public static function fromBytes(bytes:Bytes, ?stream:Bool #if (js && html5 && lime_howlerjs), ?howlHtml5 = false #end):AudioBuffer
 	{
 		if (bytes == null) return null;
 
@@ -222,7 +224,7 @@ class AudioBuffer
 		if (stream == null) stream = true;
 		var audioBuffer = new AudioBuffer();
 		audioBuffer.__srcHowl = new Howl({src: ["data:" + AudioCodec.fromHTML5(__getCodecFromBytes(bytes)) + ";base64," + Base64.encode(bytes)],
-			html5: true, preload: !stream});
+			html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
@@ -280,11 +282,7 @@ class AudioBuffer
 		var audioBuffer = new AudioBuffer();
 
 		if (stream == null) stream = true;
-		#if force_html5_audio
-		audioBuffer.__srcHowl = new Howl({src: [path], html5: true, preload: !stream});
-		#else
-		audioBuffer.__srcHowl = new Howl({src: [path], html5: howlHtml5, preload: !stream});
-		#end
+		audioBuffer.__srcHowl = new Howl({src: [path], html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 
 		return audioBuffer;
 		#elseif flash
@@ -317,11 +315,7 @@ class AudioBuffer
 		var audioBuffer = new AudioBuffer();
 
 		if (stream == null) stream = true;
-		#if force_html5_audio
-		audioBuffer.__srcHowl = new Howl({src: paths, html5: true, preload: !stream});
-		#else
-		audioBuffer.__srcHowl = new Howl({src: paths, html5: howlHtml5, preload: !stream});
-		#end
+		audioBuffer.__srcHowl = new Howl({src: paths, html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 
 		return audioBuffer;
 		#else
