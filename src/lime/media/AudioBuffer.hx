@@ -189,11 +189,13 @@ class AudioBuffer
 		if (base64String.indexOf(",") == -1)
 		{
 			final bytes = Base64.decode(base64String);
-			final codec = AudioCodec.fromHTML5(__getCodecFromBytes(bytes));
+			final codec = __getCodecFromBytes(bytes);
 			if (codec != null) base64String = "data:" + codec.toHTML5() + ";base64," + base64String;
 		}
 
 		var audioBuffer = new AudioBuffer();
+
+		if (stream == null) stream = false;
 		audioBuffer.__srcHowl = new Howl({src: [base64String], html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
@@ -221,10 +223,14 @@ class AudioBuffer
 		if (bytes == null) return null;
 
 		#if (js && html5 && lime_howlerjs)
-		if (stream == null) stream = true;
 		var audioBuffer = new AudioBuffer();
-		audioBuffer.__srcHowl = new Howl({src: ["data:" + AudioCodec.fromHTML5(__getCodecFromBytes(bytes)) + ";base64," + Base64.encode(bytes)],
-			html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
+
+		var base64String = Base64.encode(bytes);
+		final codec = __getCodecFromBytes(bytes);
+		if (codec != null) base64String = "data:" + codec.toHTML5() + ";base64," + base64String;
+
+		if (stream == null) stream = false;
+		audioBuffer.__srcHowl = new Howl({src: [base64String], html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
@@ -281,7 +287,7 @@ class AudioBuffer
 		#if (js && html5 && lime_howlerjs)
 		var audioBuffer = new AudioBuffer();
 
-		if (stream == null) stream = true;
+		if (stream == null) stream = false;
 		audioBuffer.__srcHowl = new Howl({src: [path], html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 
 		return audioBuffer;
@@ -314,7 +320,7 @@ class AudioBuffer
 		#if (js && html5 && lime_howlerjs)
 		var audioBuffer = new AudioBuffer();
 
-		if (stream == null) stream = true;
+		if (stream == null) stream = false;
 		audioBuffer.__srcHowl = new Howl({src: paths, html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 
 		return audioBuffer;
