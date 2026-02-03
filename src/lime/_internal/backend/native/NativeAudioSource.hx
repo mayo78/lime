@@ -133,7 +133,10 @@ class NativeAudioSource
 		AL.sourcef(source, AL.MAX_DISTANCE, 1);
 
 		loopPoints = [0, 0];
-		anglesArray = [0, 0];
+		anglesArray = [Math.PI / 6, -Math.PI / 6];
+
+		if (AudioManager.__spatializeSupported) AL.sourcei(source, AL.SOURCE_SPATIALIZE_SOFT, AL.FALSE);
+		if (AudioManager.__stereoAnglesSupported) AL.sourcefv(source, AL.STEREO_ANGLES, anglesArray);
 	}
 
 	public function dispose():Void
@@ -609,7 +612,7 @@ class NativeAudioSource
 				anglesArray[1] = -Math.PI / 6;
 				if (AudioManager.__spatializeSupported)
 				{
-					AL.sourcei(source, AL.SOURCE_SPATIALIZE_SOFT, Math.abs(position.x) > 1e-04 ? AL.TRUE : AL.FALSE);
+					AL.sourcei(source, AL.SOURCE_SPATIALIZE_SOFT, Math.abs(value) > 1e-04 ? AL.TRUE : AL.FALSE);
 				}
 				AL.source3f(source, AL.POSITION, position.x, position.y, position.z);
 			}
