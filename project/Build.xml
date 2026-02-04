@@ -43,6 +43,7 @@
 	<!-- <set name="LIME_VPX" value="1" />
 	<set name="LIME_WEBM" value="1" /> -->
 	<set name="LIME_ZLIB" value="1" />
+	<set name="LIME_DRLIBS" value="1" />
 
 	<set name="OUTPUT_DIR" value="../ndll" unless="OUTPUT_DIR" />
 	<set name="NATIVE_TOOLKIT_PATH" value="lib" unless="NATIVE_TOOLKIT_PATH" />
@@ -88,6 +89,18 @@
 			<compilerflag value="-DCURL_STATICLIB" />
 
 			<file name="src/net/curl/CURLBindings.cpp" />
+
+		</section>
+
+		<section if="LIME_DRLIBS">
+
+			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/dr_libs/" />
+			<compilerflag value="-DLIME_DRLIBS" />
+
+			<file name="src/media/codecs/flac/DrFlac.cpp" />
+			<file name="src/media/codecs/mp3/DrMp3.cpp" />
+			<file name="src/media/codecs/wav/DrWav.cpp" />
+			<file name="src/media/codecs/DrLibsBindings.cpp" />
 
 		</section>
 
@@ -181,8 +194,6 @@
 			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/ogg/include/" />
 			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/vorbis/include/" />
 			<compilerflag value="-DLIME_OGG" />
-
-			<file name="src/media/containers/OGG.cpp" />
 
 		</section>
 
@@ -346,8 +357,8 @@
 			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/vorbis/include/" />
 			<compilerflag value="-DLIME_VORBIS" />
 
-			<file name="src/media/codecs/vorbis/VorbisBindings.cpp" />
 			<file name="src/media/codecs/vorbis/VorbisFile.cpp" />
+			<file name="src/media/codecs/VorbisBindings.cpp" />
 
 		</section>
 
@@ -371,7 +382,6 @@
 		<file name="src/math/Rectangle.cpp" />
 		<file name="src/math/Vector2.cpp" />
 		<file name="src/media/AudioBuffer.cpp" />
-		<file name="src/media/containers/WAV.cpp" />
 		<file name="src/system/CFFI.cpp" />
 		<file name="src/system/CFFIPointer.cpp" />
 		<file name="src/system/ClipboardEvent.cpp" />
@@ -429,6 +439,7 @@
 	<include name="lib/vpx-files.xml" />
 	<include name="lib/webm-files.xml" />
 	<include name="lib/zlib-files.xml" />
+	<include name="lib/dr-libs-files.xml" />
 
 	<set name="DEBUGEXTRA" value="-debug" if="fulldebug" />
 	<set name="LIBSUFFIX" value="${HX_TARGET_SUFFIX}" if="HX_TARGET_SUFFIX" />
@@ -463,6 +474,7 @@
 		<files id="native-toolkit-vpx" if="LIME_VPX" />
 		<files id="native-toolkit-webm" if="LIME_WEBM" />
 		<files id="native-toolkit-zlib" if="LIME_ZLIB" />
+		<files id="native-toolkit-dr-libs" if="LIME_DRLIBS" />
 
 		<section unless="static_link">
 

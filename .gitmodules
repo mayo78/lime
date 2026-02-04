@@ -87,3 +87,7 @@
 	path = project/lib/hashlink
 	url = https://github.com/HaxeFoundation/hashlink
 	shallow = true
+[submodule "project/lib/dr_libs"]
+	path = project/lib/dr_libs
+	url = https://github.com/mackron/dr_libs
+	shallow = true
