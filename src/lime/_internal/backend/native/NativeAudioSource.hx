@@ -9,6 +9,7 @@ import sys.thread.Mutex;
 import lime.math.Vector2;
 import lime.math.Vector4;
 import lime.media.openal.AL;
+import lime.media.openal.ALC;
 import lime.media.openal.ALBuffer;
 import lime.media.openal.ALSource;
 import lime.media.AudioBuffer;
@@ -81,7 +82,7 @@ class NativeAudioSource
 	private var completed:Bool;
 	private var format:Int;
 	private var loops:Int;
-	private var pauseTime:Float;
+	private var pauseSample:Int;
 	private var peaks:Array<Float>;
 	private var playing:Bool;
 	private var position:Vector4;
@@ -160,10 +161,11 @@ class NativeAudioSource
 		streamed = parent.buffer.data == null && parent.buffer.decoder != null;
 		if (streamed)
 		{
+			samples = Int64.toInt(parent.buffer.decoder.total());
+
 			if (mutex == null) mutex = new Mutex();
 			mutex.acquire();
 
-			samples = Int64.toInt(parent.buffer.decoder.total());
 			decoder = parent.buffer.decoder.clone();
 			standaloneDecoder = decoder != null;
 			if (!standaloneDecoder) decoder = parent.buffer.decoder;
@@ -271,7 +273,7 @@ class NativeAudioSource
 		bufferViews = null;
 
 		loopPoints[0] = loopPoints[1] = 0;
-		pauseTime = 0;
+		pauseSample = 0;
 	}
 
 	public function play():Void
@@ -279,7 +281,7 @@ class NativeAudioSource
 		if (!loaded || playing) return;
 
 		playing = true;
-		setCurrentTime(pauseTime);
+		setCurrentTime(pauseSample * 1000.0 / parent.buffer.sampleRate);
 	}
 
 	public function pause():Void
@@ -289,7 +291,7 @@ class NativeAudioSource
 		if (timer != null) timer.stop();
 		playing = false;
 		completed = false;
-		pauseTime = getCurrentSampleOffset() * 1000.0 / parent.buffer.sampleRate;
+		pauseSample = getCurrentSampleOffset();
 
 		AL.sourcePause(source);
 		if (streamed) stopStream();
@@ -302,7 +304,7 @@ class NativeAudioSource
 		if (timer != null) timer.stop();
 		playing = false;
 		completed = false;
-		pauseTime = 0;
+		pauseSample = 0;
 
 		AL.sourceStop(source);
 		if (streamed) stopStream();
@@ -315,7 +317,8 @@ class NativeAudioSource
 
 		var sampleOffset = getCurrentSampleOffset();
 		var remaining = (loopPoints[1] - sampleOffset) * 1000.0 / parent.buffer.sampleRate / getPitch();
-		if (remaining > 30 && getPlaying() && streamLoops == 0)
+
+		if (remaining > 30 && AL.getSourcei(source, AL.SOURCE_STATE) == AL.PLAYING && (!streaming || !streamEnded) && streamLoops == 0)
 		{
 			timer = resetTimer(timer, remaining, complete);
 			return;
@@ -324,18 +327,18 @@ class NativeAudioSource
 		if (loops > 0)
 		{
 			loops--;
-			var time = sampleOffset * 1000.0 / parent.buffer.sampleRate;
+			remaining = (loopPoints[1] - loopPoints[0]) * 1000.0 / parent.buffer.sampleRate / getPitch();
 			if (streamed) streamMutex.acquire();
 			if (streamLoops > 0)
 			{
 				streamLoops--;
 				timer = resetTimer(timer, remaining, complete);
-				pauseTime = time;
+				pauseSample = loopPoints[0];
 			}
 			else if (AudioManager.__loopPointsSupported && AL.getSourcei(source, AL.LOOPING) == AL.TRUE)
 			{
 				timer = resetTimer(timer, remaining, complete);
-				pauseTime = time;
+				pauseSample = loopPoints[0];
 			}
 			else
 			{
@@ -350,7 +353,8 @@ class NativeAudioSource
 		{
 			if (timer == null) timer.stop();
 			completed = true;
-			pauseTime = 0;
+			playing = false;
+			pauseSample = 0;
 		}
 
 		parent.onComplete.dispatch();
@@ -359,21 +363,22 @@ class NativeAudioSource
 	// Get & Set Methods
 	public function getCurrentTime():Float
 	{
-		if (!loaded) return 0;
-
-		var sampleOffset = getCurrentSampleOffset();
-		if (!playing && !completed) return pauseTime - parent.offset;
-		else return (sampleOffset * 1000.0 / parent.buffer.sampleRate) - parent.offset;
+		return (getCurrentSampleOffset() * 1000.0 / parent.buffer.sampleRate) - parent.offset;
 	}
 
 	private function getCurrentSampleOffset():Int
 	{
-		if (completed) return loopPoints[1];
+		if (!loaded) return 0;
+		else if (completed) return loopPoints[1];
+		else if (!playing) return pauseSample;
 
 		var sampleOffset = AL.getSourcei(source, AL.SAMPLE_OFFSET);
 		if (streamed)
 		{
-			sampleOffset += bufferCurs[STREAM_MAX_BUFFERS - (queuedBuffers > 1 ? queuedBuffers : 1)];
+			if (queuedBuffers == 0) return pauseSample;
+
+			sampleOffset += bufferCurs[STREAM_MAX_BUFFERS - queuedBuffers];
+			if (AL.getSourcei(source, AL.SOURCE_STATE) == AL.STOPPED) sampleOffset += STREAM_BUFFER_SAMPLES;
 		}
 
 		if (loops > streamLoops && sampleOffset >= loopPoints[1])
@@ -395,7 +400,7 @@ class NativeAudioSource
 		if (sampleOffset < 0) sampleOffset = 0;
 		else if (sampleOffset > loopPoints[1]) sampleOffset = loopPoints[1];
 
-		pauseTime = sampleOffset * 1000.0 / parent.buffer.sampleRate;
+		pauseSample = sampleOffset;
 
 		if (streamed)
 		{
@@ -638,8 +643,7 @@ class NativeAudioSource
 
 	public function getPlaying():Bool
 	{
-		if (!loaded) return playing;
-		else return AL.getSourcei(source, AL.SOURCE_STATE) == AL.PLAYING && (!streaming || !streamEnded);
+		return playing;
 	}
 
 	public function getPosition():Vector4
@@ -710,11 +714,16 @@ class NativeAudioSource
 
 	function fillBuffers(n:Int):Void
 	{
-		final max = STREAM_MAX_BUFFERS - 1;
+		var max = STREAM_MAX_BUFFERS - 1;
 		var i:Int, j:Int, data:ArrayBufferView, pcm:Int, decoded:Int;
-		while (n-- > 0 && !(streamEnded = !streaming) &&
-			(decoded = readToBufferData(data = bufferViews[(i = max - filledBuffers) < 0 ? 0 : i], pcm = Int64.toInt(decoder.tell()))) > 0)
+		while (n-- > 0 && !streamEnded)
 		{
+			data = bufferViews[(i = max - filledBuffers) > 0 ? i : 0];
+			pcm = Int64.toInt(decoder.tell());
+			decoded = readToBufferData(data, pcm);
+			if (decoded <= 0) break;
+			else if (filledBuffers < STREAM_MAX_BUFFERS) filledBuffers++;
+
 			j = i;
 			while (i < max)
 			{
@@ -724,17 +733,16 @@ class NativeAudioSource
 				i = j;
 			}
 			bufferViews[max] = data;
-			bufferCurs[max] = pcm;
+			bufferCurs[max] = pauseSample = pcm;
 			bufferLens[max] = decoded;
 			queuedBuffers++;
-			if (filledBuffers < STREAM_MAX_BUFFERS) filledBuffers++;
 		}
 	}
 
 	function flushBuffers():Void
 	{
 		var i = STREAM_MAX_BUFFERS - queuedBuffers + internalQueuedBuffers;
-		while (internalQueuedBuffers < STREAM_FLUSH_BUFFERS && internalQueuedBuffers < queuedBuffers && !(streamEnded = !streaming))
+		while (internalQueuedBuffers < STREAM_FLUSH_BUFFERS && internalQueuedBuffers < queuedBuffers)
 		{
 			AL.bufferData(buffers[nextBuffer], format, bufferViews[i], bufferLens[i], parent.buffer.sampleRate);
 			AL.sourceQueueBuffer(source, buffers[nextBuffer]);
@@ -765,13 +773,10 @@ class NativeAudioSource
 
 		AL.sourceUnqueueBuffers(source, AL.getSourcei(source, AL.BUFFERS_QUEUED));
 
-		force = streaming;
-		streaming = true;
 		internalQueuedBuffers = queuedBuffers = filledBuffers = streamLoops = nextBuffer = 0;
 		decoder.seek(sample);
 		fillBuffers(n);
 		flushBuffers();
-		streaming = force;
 	}
 
 	static function streamThreadRun():Void
@@ -798,10 +803,9 @@ class NativeAudioSource
 				i = streamAudios.length;
 				while (i-- > 0)
 				{
-					(backend = streamAudios[i]).mutex.acquire();
-
+					backend = streamAudios[i];
 					if (!backend.streaming || backend.source == null) backend.removeStream();
-					else
+					else if (backend.mutex.tryAcquire())
 					{
 						backend.skipBuffers(AL.getSourcei(backend.source, AL.BUFFERS_PROCESSED));
 
@@ -814,14 +818,13 @@ class NativeAudioSource
 						if (AL.getSourcei(backend.source, AL.SOURCE_STATE) == AL.STOPPED)
 						{
 							AL.sourcePlay(backend.source);
-							backend.timer = resetTimer(backend.timer, (backend.loopPoints[1] - backend.getCurrentSampleOffset())
+							backend.timer = resetTimer(backend.timer, (backend.loopPoints[1] - backend.bufferCurs[STREAM_MAX_BUFFERS - backend.queuedBuffers])
 								* 1000.0 / backend.parent.buffer.sampleRate / backend.getPitch(), backend.complete);
 						}
 
+						backend.mutex.release();
 						if (backend.streamEnded && backend.queuedBuffers == backend.internalQueuedBuffers) backend.removeStream();
 					}
-
-					backend.mutex.release();
 				}
 			}
 			catch (e:haxe.Exception)

@@ -5,6 +5,7 @@ import lime.media.AudioSource;
 #if lime_howlerjs
 import js.html.audio.AnalyserNode;
 import js.html.audio.ChannelSplitterNode;
+import js.html.audio.MediaElementAudioSourceNode;
 import js.html.MediaElement;
 import js.lib.Float32Array;
 import lime.media.howlerjs.Howl;
@@ -27,6 +28,7 @@ class HTML5AudioSource
 	private var pitch:Float;
 	private var position:Vector4;
 	#if lime_howlerjs
+	public var audioElementNode:MediaElementAudioSourceNode;
 	public var id:Int;
 	public var howl:Howl;
 
@@ -89,9 +91,11 @@ class HTML5AudioSource
 		if (channelSplitter != null) channelSplitter.disconnect();
 		if (analyserLeft != null) analyserLeft.disconnect();
 		if (analyserRight != null) analyserRight.disconnect();
+		if (audioElementNode != null) audioElementNode.disconnect();
 		channelSplitter = null;
 		analyserLeft = null;
 		analyserRight = null;
+		audioElementNode = null;
 		#end
 	}
 
@@ -403,22 +407,21 @@ class HTML5AudioSource
 			var node = untyped howl._soundById(id)._node;
 
 			//html5 audios is extremely buggy.
-			/*
-			var isHTML5 = (node is MediaElement);
-			if (isHTML5) node = Howler.ctx.createMediaElementSource(untyped node);
-			*/
 			if ((node is MediaElement))
 			{
 				for (i in 0...2) peaks[i] = 0;
 				return peaks;
 			}
+			/*if ((node is MediaElement))
+			{
+				audioElementNode = Howler.ctx.createMediaElementSource(untyped node);
+				audioElementNode.connect(untyped Howler.ctx.destination);
+				node = audioElementNode;
+			}
+			else*/
+			if (untyped node.bufferSource) node = untyped node.bufferSource;
 
 			var ctx = untyped node.context;
-			if (untyped node.bufferSource)
-			{
-				node = untyped node.bufferSource;
-			}
-
 			channelSplitter = new ChannelSplitterNode(untyped ctx, {numberOfOutputs: 2});
 			analyserLeft = new AnalyserNode(untyped ctx);
 			analyserRight = new AnalyserNode(untyped ctx);
@@ -429,8 +432,6 @@ class HTML5AudioSource
 			untyped node.connect(channelSplitter);
 			channelSplitter.connect(analyserLeft, 0);
 			channelSplitter.connect(analyserRight, 1);
-
-			//if (isHTML5) channelSplitter.connect(untyped Howler.ctx.destination);
 		}
 
 		if (dataArrayLeft == null) dataArrayLeft = new Float32Array(2048);
