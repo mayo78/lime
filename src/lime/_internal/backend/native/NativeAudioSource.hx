@@ -377,13 +377,13 @@ class NativeAudioSource
 		else if (completed) return loopPoints[1];
 		else if (!playing) return pauseSample;
 
-		var sampleOffset = AL.getSourcei(source, AL.SAMPLE_OFFSET);
+		var sampleOffset:Int;
 		if (streamed)
 		{
 			seekMutex.acquire();
 			if (queuedBuffers == 0) return pauseSample;
 
-			sampleOffset += bufferCurs[STREAM_MAX_BUFFERS - queuedBuffers];
+			sampleOffset = AL.getSourcei(source, AL.SAMPLE_OFFSET) + bufferCurs[STREAM_MAX_BUFFERS - queuedBuffers];
 			if (AL.getSourcei(source, AL.SOURCE_STATE) == AL.STOPPED && internalQueuedBuffers == 0)
 			{
 				sampleOffset += STREAM_BUFFER_SAMPLES;
@@ -391,6 +391,7 @@ class NativeAudioSource
 
 			seekMutex.release();
 		}
+		else sampleOffset = AL.getSourcei(source, AL.SAMPLE_OFFSET);
 
 		if (loops > streamLoops && sampleOffset >= loopPoints[1])
 		{
@@ -756,6 +757,8 @@ class NativeAudioSource
 
 	function flushBuffers():Void
 	{
+		seekMutex.acquire();
+
 		var i = STREAM_MAX_BUFFERS - queuedBuffers + internalQueuedBuffers;
 		while (internalQueuedBuffers < STREAM_FLUSH_BUFFERS && internalQueuedBuffers < queuedBuffers)
 		{
@@ -765,6 +768,8 @@ class NativeAudioSource
 			internalQueuedBuffers++;
 			i++;
 		}
+
+		seekMutex.release();
 	}
 
 	function skipBuffers(n:Int):Void
