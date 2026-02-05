@@ -640,11 +640,11 @@ namespace lime {
 	std::wstring* System::GetHint (const char* key) {
 		std::string hintKey(key);
 
-    if (hintKey.rfind("SDL_", 0) != 0) {
+		if (hintKey.rfind("SDL_", 0) != 0) {
 			hintKey = "SDL_" + hintKey;
-    }
+		}
 
-    SDL_GetHint(hintKey.c_str());
+		SDL_GetHint(hintKey.c_str());
 
 		const char* raw = SDL_GetHint(hintKey.c_str());
 		if (!raw) {
@@ -928,7 +928,16 @@ namespace lime {
 
 		#ifndef HX_WINDOWS
 
-		success = (SDL_RWseek (stream ? (SDL_RWops*)stream->handle : NULL, offset, origin) < 0) ? -1 : 0;
+		int sdl_origin;
+		switch (origin) {
+			case SEEK_SET: sdl_origin = RW_SEEK_SET; break;
+			case SEEK_CUR: sdl_origin = RW_SEEK_CUR; break;
+			case SEEK_END: sdl_origin = RW_SEEK_END; break;
+			default:
+				System::GCExitBlocking ();
+				return -1;
+		}
+		success = (SDL_RWseek (stream ? (SDL_RWops*)stream->handle : NULL, offset, sdl_origin) < 0) ? -1 : 0;
 
 		#else
 
