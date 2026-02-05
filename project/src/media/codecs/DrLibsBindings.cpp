@@ -70,10 +70,10 @@ namespace lime {
 	}
 
 
-	value allocInt64 (size_t val) {
+	value allocDrFlacInt64 (drflac_int64 val) {
 
-		int low = val;
-		int high = (val >> 32);
+		drflac_int32 low = val;
+		drflac_int32 high = (val >> 32);
 
 		_initializeDrLibs ();
 
@@ -85,10 +85,70 @@ namespace lime {
 	}
 
 
-	vdynamic* hl_allocInt64 (size_t val) {
+	vdynamic* hl_allocDrFlacInt64 (drflac_int64 val) {
 
-		int low = val;
-		int high = (val >> 32);
+		drflac_int32 low = val;
+		drflac_int32 high = (val >> 32);
+
+		_hl_initializeDrLibs ();
+
+		hl_dyn_seti (hl_int64Value, id_low, &hlt_i32, low);
+		hl_dyn_seti (hl_int64Value, id_high, &hlt_i32, high);
+
+		return hl_int64Value;
+
+	}
+
+
+	value allocDrMp3Int64 (drmp3_int64 val) {
+
+		drmp3_int32 low = val;
+		drmp3_int32 high = (val >> 32);
+
+		_initializeDrLibs ();
+
+		alloc_field (int64Value, id_low, alloc_int (low));
+		alloc_field (int64Value, id_high, alloc_int (high));
+
+		return int64Value;
+
+	}
+
+
+	vdynamic* hl_allocDrMp3Int64 (drmp3_int64 val) {
+
+		drmp3_int32 low = val;
+		drmp3_int32 high = (val >> 32);
+
+		_hl_initializeDrLibs ();
+
+		hl_dyn_seti (hl_int64Value, id_low, &hlt_i32, low);
+		hl_dyn_seti (hl_int64Value, id_high, &hlt_i32, high);
+
+		return hl_int64Value;
+
+	}
+
+
+	value allocDrWavInt64 (drwav_int64 val) {
+
+		drwav_int32 low = val;
+		drwav_int32 high = (val >> 32);
+
+		_initializeDrLibs ();
+
+		alloc_field (int64Value, id_low, alloc_int (low));
+		alloc_field (int64Value, id_high, alloc_int (high));
+
+		return int64Value;
+
+	}
+
+
+	vdynamic* hl_allocDrWavInt64 (drwav_int64 val) {
+
+		drwav_int32 low = val;
+		drwav_int32 high = (val >> 32);
 
 		_hl_initializeDrLibs ();
 
@@ -286,7 +346,7 @@ namespace lime {
 	value lime_drlibs_flac_tell (value flac) {
 
 		drflac* pFlac = (drflac*)(uintptr_t)val_data (flac);
-		return allocInt64 (pFlac->currentPCMFrame);
+		return allocDrFlacInt64 ((drflac_int64)pFlac->currentPCMFrame);
 
 	}
 
@@ -294,7 +354,7 @@ namespace lime {
 	HL_PRIM vdynamic* HL_NAME(hl_drlibs_flac_tell) (HL_CFFIPointer* flac) {
 
 		drflac* pFlac = (drflac*)(uintptr_t)flac->ptr;
-		return hl_allocInt64 (pFlac->currentPCMFrame);
+		return hl_allocDrFlacInt64 ((drflac_int64)pFlac->currentPCMFrame);
 
 	}
 
@@ -302,7 +362,7 @@ namespace lime {
 	value lime_drlibs_flac_total (value flac) {
 
 		drflac* pFlac = (drflac*)(uintptr_t)val_data (flac);
-		return allocInt64 (pFlac->totalPCMFrameCount);
+		return allocDrFlacInt64 ((drflac_int64)pFlac->totalPCMFrameCount);
 
 	}
 
@@ -310,7 +370,7 @@ namespace lime {
 	HL_PRIM vdynamic* HL_NAME(hl_drlibs_flac_total) (HL_CFFIPointer* flac) {
 
 		drflac* pFlac = (drflac*)(uintptr_t)flac->ptr;
-		return hl_allocInt64 (pFlac->totalPCMFrameCount);
+		return hl_allocDrFlacInt64 ((drflac_int64)pFlac->totalPCMFrameCount);
 
 	}
 
@@ -475,7 +535,7 @@ namespace lime {
 	value lime_drlibs_mp3_tell (value mp3) {
 
 		drmp3* pMp3 = (drmp3*)(uintptr_t)val_data (mp3);
-		return allocInt64 (pMp3->currentPCMFrame);
+		return allocDrMp3Int64 ((drmp3_int64)pMp3->currentPCMFrame);
 
 	}
 
@@ -483,7 +543,7 @@ namespace lime {
 	HL_PRIM vdynamic* HL_NAME(hl_drlibs_mp3_tell) (HL_CFFIPointer* mp3) {
 
 		drmp3* pMp3 = (drmp3*)(uintptr_t)mp3->ptr;
-		return hl_allocInt64 (pMp3->currentPCMFrame);
+		return hl_allocDrMp3Int64 ((drmp3_int64)pMp3->currentPCMFrame);
 
 	}
 
@@ -491,7 +551,7 @@ namespace lime {
 	value lime_drlibs_mp3_total (value mp3) {
 
 		drmp3* pMp3 = (drmp3*)(uintptr_t)val_data (mp3);
-		return allocInt64 (drmp3_get_pcm_frame_count (pMp3));
+		return allocDrMp3Int64 ((drmp3_int64)drmp3_get_pcm_frame_count (pMp3));
 
 	}
 
@@ -499,7 +559,7 @@ namespace lime {
 	HL_PRIM vdynamic* HL_NAME(hl_drlibs_mp3_total) (HL_CFFIPointer* mp3) {
 
 		drmp3* pMp3 = (drmp3*)(uintptr_t)mp3->ptr;
-		return hl_allocInt64 (drmp3_get_pcm_frame_count (pMp3));
+		return hl_allocDrMp3Int64 ((drmp3_int64)drmp3_get_pcm_frame_count (pMp3));
 
 	}
 
@@ -691,8 +751,8 @@ namespace lime {
 
 		drwav* pWav = (drwav*)(uintptr_t)val_data (wav);
 		drwav_uint64 cursor;
-		if (drwav_get_cursor_in_pcm_frames(pWav, &cursor) == DRWAV_SUCCESS) return allocInt64 (cursor);
-		else return allocInt64 (0);
+		if (drwav_get_cursor_in_pcm_frames(pWav, &cursor) == DRWAV_SUCCESS) return allocDrWavInt64 ((drwav_int64)cursor);
+		else return allocDrWavInt64 (0);
 
 	}
 
@@ -701,8 +761,8 @@ namespace lime {
 
 		drwav* pWav = (drwav*)(uintptr_t)wav->ptr;
 		drwav_uint64 cursor;
-		if (drwav_get_cursor_in_pcm_frames(pWav, &cursor) == DRWAV_SUCCESS) return hl_allocInt64 (cursor);
-		else return hl_allocInt64 (0);
+		if (drwav_get_cursor_in_pcm_frames(pWav, &cursor) == DRWAV_SUCCESS) return hl_allocDrWavInt64 ((drwav_int64)cursor);
+		else return hl_allocDrWavInt64 (0);
 
 	}
 
@@ -711,8 +771,8 @@ namespace lime {
 
 		drwav* pWav = (drwav*)(uintptr_t)val_data (wav);
 		drwav_uint64 length;
-		if (drwav_get_length_in_pcm_frames(pWav, &length) == DRWAV_SUCCESS) return allocInt64 (length);
-		else return allocInt64 (0);
+		if (drwav_get_length_in_pcm_frames(pWav, &length) == DRWAV_SUCCESS) return allocDrWavInt64 ((drwav_int64)length);
+		else return allocDrWavInt64 (0);
 
 	}
 
@@ -721,8 +781,8 @@ namespace lime {
 
 		drwav* pWav = (drwav*)(uintptr_t)wav->ptr;
 		drwav_uint64 length;
-		if (drwav_get_length_in_pcm_frames(pWav, &length) == DRWAV_SUCCESS) return hl_allocInt64 (length);
-		else return hl_allocInt64 (0);
+		if (drwav_get_length_in_pcm_frames(pWav, &length) == DRWAV_SUCCESS) return hl_allocDrWavInt64 ((drwav_int64)length);
+		else return hl_allocDrWavInt64 (0);
 
 	}
 
