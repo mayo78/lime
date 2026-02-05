@@ -421,7 +421,6 @@ class AudioManager
 		#if hl var message:String = CFFI.stringValue(_message); #end
 		var device:ALDevice = handle != null ? new ALDevice(handle) : null;
 		var deviceName = __getDeviceNameFromMessage(message);
-		__alRequestEvents.add({eventType: eventType, deviceType: deviceType, device: device, deviceName: deviceName, message: message});
 
 		var currentContext = ALC.getCurrentContext();
 		var currentDevice = currentContext != null ? ALC.getContextsDevice(currentContext) : null;
