@@ -928,7 +928,7 @@ namespace lime {
 
 		#ifndef HX_WINDOWS
 
-		success = SDL_RWseek (stream ? (SDL_RWops*)stream->handle : NULL, offset, origin);
+		success = (SDL_RWseek (stream ? (SDL_RWops*)stream->handle : NULL, offset, origin) < 0) ? -1 : 0;
 
 		#else
 
