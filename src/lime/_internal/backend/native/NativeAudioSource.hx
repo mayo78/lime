@@ -118,6 +118,7 @@ class NativeAudioSource
 	public var bufferLens:Array<Int>;
 
 	public var mutex:Mutex;
+	public var seekMutex:Mutex;
 	private var buffers:Array<ALBuffer>;
 	private var nextBuffer:Int = 0;
 
@@ -151,6 +152,7 @@ class NativeAudioSource
 		source = null;
 
 		mutex = null;
+		seekMutex = null;
 	}
 
 	public function load():Void
@@ -164,7 +166,9 @@ class NativeAudioSource
 			samples = Int64.toInt(parent.buffer.decoder.total());
 
 			if (mutex == null) mutex = new Mutex();
+			if (seekMutex == null) seekMutex = new Mutex();
 			mutex.acquire();
+			seekMutex.acquire();
 
 			decoder = parent.buffer.decoder.clone();
 			standaloneDecoder = decoder != null;
@@ -193,6 +197,7 @@ class NativeAudioSource
 
 			loaded = true;
 			mutex.release();
+			seekMutex.release();
 		}
 		else if (parent.buffer.data != null)
 		{
@@ -375,10 +380,16 @@ class NativeAudioSource
 		var sampleOffset = AL.getSourcei(source, AL.SAMPLE_OFFSET);
 		if (streamed)
 		{
+			seekMutex.acquire();
 			if (queuedBuffers == 0) return pauseSample;
 
 			sampleOffset += bufferCurs[STREAM_MAX_BUFFERS - queuedBuffers];
-			if (AL.getSourcei(source, AL.SOURCE_STATE) == AL.STOPPED) sampleOffset += STREAM_BUFFER_SAMPLES;
+			if (AL.getSourcei(source, AL.SOURCE_STATE) == AL.STOPPED && internalQueuedBuffers == 0)
+			{
+				sampleOffset += STREAM_BUFFER_SAMPLES;
+			}
+
+			seekMutex.release();
 		}
 
 		if (loops > streamLoops && sampleOffset >= loopPoints[1])
@@ -724,6 +735,8 @@ class NativeAudioSource
 			if (decoded <= 0) break;
 			else if (filledBuffers < STREAM_MAX_BUFFERS) filledBuffers++;
 
+			seekMutex.acquire();
+
 			j = i;
 			while (i < max)
 			{
@@ -736,6 +749,8 @@ class NativeAudioSource
 			bufferCurs[max] = pauseSample = pcm;
 			bufferLens[max] = decoded;
 			queuedBuffers++;
+
+			seekMutex.release();
 		}
 	}
 
@@ -754,8 +769,12 @@ class NativeAudioSource
 
 	function skipBuffers(n:Int):Void
 	{
+		seekMutex.acquire();
+
 		internalQueuedBuffers -= (n = AL.sourceUnqueueBuffers(source, n).length);
 		queuedBuffers -= n;
+
+		seekMutex.release();
 	}
 
 	function snapBuffersToSample(sample:Int, force:Bool, n:Int):Void
