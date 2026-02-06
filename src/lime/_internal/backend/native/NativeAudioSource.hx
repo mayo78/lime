@@ -56,6 +56,74 @@ class NativeAudioSource
 	// how much buffers for the pool to hold.
 	public static var POOL_MAX_BUFFERS:Int = 16;
 
+	public static function playSources(sources:Array<AudioSource>):Void
+	{
+		var alSources = [], backend:NativeAudioSource;
+		for (source in sources)
+		{
+			backend = source.__backend;
+			if (backend != null && backend.loaded)
+			{
+				if (!backend.prepared) backend.prepare(backend.getCurrentTime());
+				else backend.prepared = false;
+
+				alSources.push(backend.source);
+
+				if (backend.streamed && !backend.streamEnded) backend.resetStream();
+				backend.timer = resetTimer(backend.timer, (backend.loopPoints[1] - backend.pauseSample)
+					* 1000.0 / source.buffer.sampleRate / backend.getPitch(), backend.complete);
+			}
+		}
+
+		AL.sourcePlayv(alSources);
+	}
+
+	public static function pauseSources(sources:Array<AudioSource>):Void
+	{
+		var alSources = [], backend:NativeAudioSource;
+		for (source in sources)
+		{
+			backend = source.__backend;
+			if (backend != null && backend.loaded && backend.playing)
+			{
+				alSources.push(backend.source);
+
+				if (backend.timer != null) backend.timer.stop();
+				backend.playing = false;
+				backend.completed = false;
+				backend.pauseSample = backend.getCurrentSampleOffset();
+				backend.prepared = false;
+
+				if (backend.streamed) backend.stopStream();
+			}
+		}
+
+		AL.sourcePausev(alSources);
+	}
+
+	public static function stopSources(sources:Array<AudioSource>):Void
+	{
+		var alSources = [], backend:NativeAudioSource;
+		for (source in sources)
+		{
+			backend = source.__backend;
+			if (backend != null && backend.loaded && backend.playing)
+			{
+				alSources.push(backend.source);
+
+				if (backend.timer != null) backend.timer.stop();
+				backend.playing = false;
+				backend.completed = false;
+				backend.pauseSample = 0;
+				backend.prepared = false;
+
+				if (backend.streamed) backend.stopStream();
+			}
+		}
+
+		AL.sourceStopv(alSources);
+	}
+
 	private static var bufferViewPool:Array<ArrayBufferView> = [];
 
 	private static function resetTimer(timer:Timer, time:Float, callback:Void->Void):Timer
@@ -119,6 +187,7 @@ class NativeAudioSource
 
 	public var mutex:Mutex;
 	public var seekMutex:Mutex;
+	private var prepared:Bool;
 	private var buffers:Array<ALBuffer>;
 	private var nextBuffer:Int = 0;
 
@@ -286,7 +355,16 @@ class NativeAudioSource
 		if (!loaded || playing) return;
 
 		playing = true;
-		setCurrentTime(pauseSample * 1000.0 / parent.buffer.sampleRate);
+		if (prepared)
+		{
+			prepared = false;
+
+			if (streamed && !streamEnded) resetStream();
+
+			AL.sourcePlay(source);
+			timer = resetTimer(timer, (loopPoints[1] - pauseSample) * 1000.0 / parent.buffer.sampleRate / getPitch(), complete);
+		}
+		else setCurrentTime(pauseSample * 1000.0 / parent.buffer.sampleRate);
 	}
 
 	public function pause():Void
@@ -297,6 +375,7 @@ class NativeAudioSource
 		playing = false;
 		completed = false;
 		pauseSample = getCurrentSampleOffset();
+		prepared = false;
 
 		AL.sourcePause(source);
 		if (streamed) stopStream();
@@ -310,9 +389,42 @@ class NativeAudioSource
 		playing = false;
 		completed = false;
 		pauseSample = 0;
+		prepared = false;
 
 		AL.sourceStop(source);
 		if (streamed) stopStream();
+	}
+
+	public function prepare(time:Float):Void
+	{
+		if (!loaded) return;
+
+		var sampleOffset = Std.int((time + parent.offset) / 1000.0 * parent.buffer.sampleRate);
+		if (sampleOffset > loopPoints[1]) sampleOffset = loopPoints[1];
+		else if (sampleOffset < 0) sampleOffset = 0;
+
+		if (prepared && pauseSample == sampleOffset) return;
+
+		playing = false;
+		completed = false;
+
+		pauseSample = sampleOffset;
+		prepared = true;
+
+		if (timer != null) timer.stop();
+		if (streamed)
+		{
+			mutex.acquire();
+			stopStream();
+			AL.sourceStop(source);
+			snapBuffersToSample(sampleOffset, false, STREAM_FLUSH_BUFFERS);
+			mutex.release();
+		}
+		else
+		{
+			AL.sourcei(source, AL.SAMPLE_OFFSET, sampleOffset);
+			AL.sourcePause(source);
+		}
 	}
 
 	// Event Handlers
@@ -368,13 +480,13 @@ class NativeAudioSource
 	// Get & Set Methods
 	public function getCurrentTime():Float
 	{
-		return (getCurrentSampleOffset() * 1000.0 / parent.buffer.sampleRate) - parent.offset;
+		if (loaded) return (getCurrentSampleOffset() * 1000.0 / parent.buffer.sampleRate) - parent.offset;
+		else return 0;
 	}
 
 	private function getCurrentSampleOffset():Int
 	{
-		if (!loaded) return 0;
-		else if (completed) return loopPoints[1];
+		if (completed) return loopPoints[1];
 		else if (!playing) return pauseSample;
 
 		var sampleOffset:Int;
@@ -409,10 +521,11 @@ class NativeAudioSource
 		if (!loaded) return 0;
 
 		var sampleOffset = Std.int((value + parent.offset) / 1000.0 * parent.buffer.sampleRate);
-		if (sampleOffset < 0) sampleOffset = 0;
-		else if (sampleOffset > loopPoints[1]) sampleOffset = loopPoints[1];
+		if (sampleOffset > loopPoints[1]) sampleOffset = loopPoints[1];
+		else if (sampleOffset < 0) sampleOffset = 0;
 
 		pauseSample = sampleOffset;
+		prepared = false;
 
 		if (streamed)
 		{
@@ -545,6 +658,8 @@ class NativeAudioSource
 
 	private function updateLoopPoints():Void
 	{
+		prepared = false;
+
 		var sampleOffset = getCurrentSampleOffset();
 		var canLoop = loops > streamLoops;
 		var fixed = sampleOffset >= loopPoints[1];

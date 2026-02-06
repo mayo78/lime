@@ -15,6 +15,21 @@ import lime.media.howlerjs.Howler;
 @:access(lime.media.AudioBuffer)
 class HTML5AudioSource
 {
+	public static function playSources(sources:Array<AudioSource>):Void
+	{
+		for (source in sources) source.play();
+	}
+
+	public static function pauseSources(sources:Array<AudioSource>):Void
+	{
+		for (source in sources) source.pause();
+	}
+
+	public static function stopSources(sources:Array<AudioSource>):Void
+	{
+		for (source in sources) source.stop();
+	}
+
 	public var parent:AudioSource;
 
 	private var completed:Bool;
@@ -150,6 +165,8 @@ class HTML5AudioSource
 		stopTimer();
 		#end
 	}
+
+	public function prepare(time:Float):Void {}
 
 	// Event Handlers
 	private inline function stopTimer():Void
