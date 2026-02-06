@@ -12,7 +12,6 @@ import lime.system.System;
 import sys.FileSystem;
 import sys.io.File;
 #end
-import sys.thread.Deque;
 import lime._internal.backend.native.NativeCFFI;
 import lime.media.openal.AL;
 import lime.media.openal.ALC;
@@ -90,10 +89,13 @@ class AudioManager
 	**/
 	public static var gain(get, set):Float;
 
-	@:noCompletion private static var __updateTimer:Timer;
 	@:noCompletion private static var __muted:Bool;
 	@:noCompletion private static var __gain:Float;
 	#if lime_openal
+	#if (ios || tvos || mac)
+	@:noCompletion private static var __updateTimer:Timer;
+	#end
+
 	@:noCompletion private static var __captureExtSupported:Bool;
 	@:noCompletion private static var __disconnectExtSupported:Bool;
 	@:noCompletion private static var __reopenDeviceSupported:Bool;
@@ -105,8 +107,6 @@ class AudioManager
 	@:noCompletion private static var __moreFormatsSupported:Bool;
 	@:noCompletion private static var __spatializeSupported:Bool;
 	@:noCompletion private static var __stereoAnglesSupported:Bool;
-
-	@:noCompletion private static var __alRequestEvents:Deque<ALDeviceEvent> = new Deque();
 	#elseif flash
 	@:noCompletion private static var __flashSoundTransform:SoundTransform;
 	#end
@@ -127,7 +127,7 @@ class AudioManager
 				__setupConfig();
 				refresh();
 
-				AL.distanceModel(AL.NONE);
+				#if !(neko || mobile)
 				if (__reopenDeviceSupported) AL.disable(AL.STOP_SOURCES_ON_DISCONNECT_SOFT);
 				if (__systemEventsSupported) {
 					ALC.eventControlSOFT([
@@ -135,17 +135,23 @@ class AudioManager
 						ALC.EVENT_TYPE_DEVICE_ADDED_SOFT,
 						ALC.EVENT_TYPE_DEVICE_REMOVED_SOFT],
 					true);
-					ALC.eventCallbackSOFT(__alDeviceEventCallback);
+					ALC.eventCallbackSOFT(__deviceEventCallback);
 				}
+				#end
 			}
 			#end
 		}
 
+		#if (lime_cffi && !macro && lime_openal && (ios || tvos || mac))
 		if (__updateTimer == null)
 		{
 			__updateTimer = new Timer(100);
-			__updateTimer.run = __update;
+			__updateTimer.run = function()
+			{
+				NativeCFFI.lime_al_cleanup();
+			};
 		}
+		#end
 
 		gain = 1;
 		#end
@@ -329,7 +335,7 @@ class AudioManager
 		{
 			if (__flashSoundTransform == null) __flashSoundTransform = new SoundTransform();
 			__flashSoundTransform.gain = value ? 0 : __gain;
-			SoundMIxer.soundTransform = __flashSoundTransform;
+			SoundMixer.soundTransform = __flashSoundTransform;
 		}
 		#end
 		#end
@@ -356,26 +362,12 @@ class AudioManager
 		{
 			if (__flashSoundTransform == null) __flashSoundTransform = new SoundTransform();
 			__flashSoundTransform.volume = __muted ? 0 : value;
-			SoundMIxer.soundTransform = __flashSoundTransform;
+			SoundMixer.soundTransform = __flashSoundTransform;
 		}
 		#end
 		#end
 		return value;
 	}
-
-	@:noCompletion private static function __update():Void
-	{
-		#if (lime_openal && !lime_doc_gen)
-		NativeCFFI.lime_al_cleanup();
-
-		if (__systemEventsSupported) {
-			var request;
-			while ((request = __alRequestEvents.pop(false)) != null)
-				__deviceEventCallback(request.eventType, request.deviceType, request.device, request.deviceName, request.message);
-		}
-		#end
-	}
-
 
 	#if (lime_openal && !lime_doc_gen)
 	@:noCompletion private static function __setupConfig():Void
@@ -422,9 +414,14 @@ class AudioManager
 	// device is null... and its actually intended cuz its tied to the device its being used rn.
 	// why
 	// and in ALC.EVENT_TYPE_DEFAULT_DEVICE_CHANGED_SOFT, deviceName is the device GUID
-	@:noCompletion private static function __deviceEventCallback(eventType:Int, deviceType:Int, device:ALDevice,
-		deviceName:String, message:String)
+	#if !(neko || mobile)
+	@:noCompletion private static function __deviceEventCallback(eventType:Int, deviceType:Int, handle:CFFIPointer,
+		#if hl _message:hl.Bytes #else message:String #end)
 	{
+		#if hl var message:String = CFFI.stringValue(_message); #end
+		var device:ALDevice = handle != null ? new ALDevice(handle) : null;
+		var deviceName = __getDeviceNameFromMessage(message);
+
 		var currentContext = ALC.getCurrentContext();
 		var currentDevice = currentContext != null ? ALC.getContextsDevice(currentContext) : null;
 		if (deviceType == ALC.PLAYBACK_DEVICE_SOFT) {
@@ -450,6 +447,7 @@ class AudioManager
 			}
 		}
 	}
+	#end
 
 	@:noCompletion private static function __refresh():Void
 	{
@@ -472,6 +470,8 @@ class AudioManager
 		__moreFormatsSupported = AL.isExtensionPresent('AL_EXT_MCFORMATS');
 		__spatializeSupported = AL.isExtensionPresent('AL_SOFT_source_spatialize');
 		__stereoAnglesSupported = AL.isExtensionPresent('AL_EXT_STEREO_ANGLES');
+
+		AL.distanceModel(AL.NONE);
 	}
 
 	@:noCompletion private static function __formatDeviceName(deviceName:String)
@@ -488,15 +488,6 @@ class AudioManager
 		if (StringTools.startsWith(message, 'Device removed: ')) return message.substr(16);
 		else if (StringTools.startsWith(message, 'Device added: ')) return message.substr(14);
 		else return null;
-	}
-
-	@:noCompletion private static function __alDeviceEventCallback(eventType:Int, deviceType:Int, handle:CFFIPointer,
-		#if hl _message:hl.Bytes #else message:String #end)
-	{
-		#if hl var message:String = CFFI.stringValue(_message); #end
-		var device:ALDevice = handle != null ? new ALDevice(handle) : null;
-		var deviceName = __getDeviceNameFromMessage(message);
-		__alRequestEvents.add({eventType: eventType, deviceType: deviceType, device: device, deviceName: deviceName, message: message});
 	}
 	#end
 }

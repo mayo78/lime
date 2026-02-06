@@ -195,7 +195,9 @@ class AudioBuffer
 
 		var audioBuffer = new AudioBuffer();
 
-		if (stream == null) stream = false;
+		if (howlHtml5) stream = true;
+		else if (stream) howlHtml5 = true;
+		else if (stream == null) stream = false;
 		audioBuffer.__srcHowl = new Howl({src: [base64String], html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 		return audioBuffer;
 		#elseif (lime_cffi && !macro)
@@ -229,7 +231,9 @@ class AudioBuffer
 		final codec = __getCodecFromBytes(bytes);
 		if (codec != null) base64String = "data:" + codec.toHTML5() + ";base64," + base64String;
 
-		if (stream == null) stream = false;
+		if (howlHtml5) stream = true;
+		else if (stream) howlHtml5 = true;
+		else if (stream == null) stream = false;
 		audioBuffer.__srcHowl = new Howl({src: [base64String], html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 
 		return audioBuffer;
@@ -287,7 +291,9 @@ class AudioBuffer
 		#if (js && html5 && lime_howlerjs)
 		var audioBuffer = new AudioBuffer();
 
-		if (stream == null) stream = false;
+		if (howlHtml5) stream = true;
+		else if (stream) howlHtml5 = true;
+		else if (stream == null) stream = false;
 		audioBuffer.__srcHowl = new Howl({src: [path], html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 
 		return audioBuffer;
@@ -320,7 +326,9 @@ class AudioBuffer
 		#if (js && html5 && lime_howlerjs)
 		var audioBuffer = new AudioBuffer();
 
-		if (stream == null) stream = false;
+		if (howlHtml5) stream = true;
+		else if (stream) howlHtml5 = true;
+		else if (stream == null) stream = false;
 		audioBuffer.__srcHowl = new Howl({src: paths, html5: #if force_html5_audio true #else howlHtml5 #end, preload: !stream});
 
 		return audioBuffer;

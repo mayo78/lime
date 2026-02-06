@@ -146,14 +146,6 @@ class AudioSource
 	}
 
 	/**
-		Starts or resumes audio playback.
-	**/
-	public function play():Void
-	{
-		__backend.play();
-	}
-
-	/**
 		Pauses audio playback.
 	**/
 	public function pause():Void
@@ -162,11 +154,51 @@ class AudioSource
 	}
 
 	/**
+		Starts or resumes audio playback.
+	**/
+	public function play():Void
+	{
+		__backend.play();
+	}
+
+	/**
+		Prepare an audio playback on 'play()' to avoid stutters.
+	**/
+	public function prepare(time:Float):Void
+	{
+		__backend.prepare(time);
+	}
+
+	/**
 		Stops audio playback and resets the playback position to the beginning.
 	**/
 	public function stop():Void
 	{
 		__backend.stop();
+	}
+
+	/**
+		Pauses a list of audis at the same time.
+	**/
+	public static function pauseSources(sources:Array<AudioSource>):Void
+	{
+		AudioSourceBackend.pauseSources(sources);
+	}
+
+	/**
+		Plays a list of audios at the same time.
+	**/
+	public static function playSources(sources:Array<AudioSource>):Void
+	{
+		AudioSourceBackend.playSources(sources);
+	}
+
+	/**
+		Stops a list of audios at the same time.
+	**/
+	public static function stopSources(sources:Array<AudioSource>):Void
+	{
+		AudioSourceBackend.stopSources(sources);
 	}
 
 	@:noCompletion private inline function init():Void

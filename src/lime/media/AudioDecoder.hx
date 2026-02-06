@@ -188,27 +188,8 @@ class AudioDecoder
 		if (path == null) return null;
 
 		#if (lime_cffi && !macro)
-		#if sys
-		if (codec == null) {
-			final file = File.read(path, true);
-			codec = AudioBuffer.__getCodecFromInput(file);
-			file.close();
-		}
-		#end
+		var decoder:AudioDecoder;
 
-		var decoder:AudioDecoder = switch (codec)
-		{
-			case WAVE: WaveDecoder.fromFile(path);
-			case MP3: MP3Decoder.fromFile(path);
-			#if lime_vorbis
-			case OGG: VorbisDecoder.fromFile(path);
-			#end
-			case FLAC: FLACDecoder.fromFile(path);
-			default: null;
-		}
-		if (decoder != null) return decoder;
-
-		/*
 		decoder = WaveDecoder.fromFile(path);
 		if (decoder != null) return decoder;
 
@@ -222,7 +203,6 @@ class AudioDecoder
 
 		decoder = FLACDecoder.fromFile(path);
 		if (decoder != null) return decoder;
-		*/
 		#end
 
 		return null;
