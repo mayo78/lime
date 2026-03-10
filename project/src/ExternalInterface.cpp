@@ -3221,7 +3221,7 @@ namespace lime {
 	HL_PRIM bool HL_NAME(hl_window_set_vsync_mode) (HL_CFFIPointer* window, int mode) {
 
 		Window* targetWindow = (Window*)window->ptr;
-		return targetWindow->SetVSyncMode((WindowVSyncMode)mode);
+		return targetWindow->SetVSync((WindowVSyncMode)mode);
 
 	}
 

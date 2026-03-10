@@ -22,7 +22,7 @@ namespace lime {
 				gameControllers[id] = gameController;
 				gameControllerIDs[deviceID] = id;
 
-		return true;
+				return true;
 
 			}
 
@@ -42,6 +42,10 @@ namespace lime {
 			gameControllers.erase (id);
 
 			return true;
+
+		}
+
+		return false;
 
 	}
 
@@ -64,9 +68,7 @@ namespace lime {
 
 		SDL_Joystick* joystick = SDL_GetGamepadJoystick (gameControllers[id]);
 
-		SDL_Joystick* joystick = SDL_GameControllerGetJoystick (it->second);
-		if (joystick == nullptr)
-			return nullptr;
+		if (joystick) {
 
 			char* guid = new char[64];
 			SDL_GUIDToString (SDL_GetJoystickGUID (joystick), guid, 64);
