@@ -13,7 +13,7 @@ namespace lime {
 	static int id_id;
 	static int id_type;
 	static int id_value;
-	static uint64_t id_timestamp;
+	static double id_timestamp;
 	static bool init = false;
 
 
@@ -24,7 +24,7 @@ namespace lime {
 		button = 0;
 		id = 0;
 		type = GAMEPAD_AXIS_MOVE;
-		timestamp = 0;
+		timestamp = 0.0;
 
 	}
 

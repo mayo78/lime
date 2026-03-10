@@ -1,5 +1,6 @@
 <xml>
 	<set name="HXCPP_CPP20" value="1" />
+	<set name="OBJC_ARC" value="1" if="apple" />
 
 	<include name="${HXCPP}/build-tool/BuildCommon.xml" />
 
@@ -30,15 +31,10 @@
 	<set name="LIME_OPENAL" value="1" if="LIME_OPENALSOFT" />
 	<set name="LIME_OPENAL" value="1" if="LIME_MOJOAL" />
 	<set name="LIME_OPENGL" value="1" />
+	<set name="LIME_GLAD" value="1" if="LIME_OPENGL" unless="ios || tvos" />
 	<set name="LIME_PIXMAN" value="1" />
 	<set name="LIME_PNG" value="1" />
-	<set name="LIME_SDL" value="1" if="mojoal || winrt || switch" />
-	<set name="LIME_SDL3" value="1" unless="LIME_SDL" />
-	<!-- <set name="LIME_SDL_ANGLE" value="1" if="windows" unless="static_link" /> -->
-	<set name="LIME_SDL_ANGLE" value="1" if="windows LIME_SDL_ANGLE" unless="static_link" />
-	<set name="LIME_SDL_ANGLE" value="1" if="windows angle" unless="static_link" />
-	<set name="LIME_SDL_ANGLE" value="1" if="winrt" />
-	<set name="LIME_TINYFILEDIALOGS" value="1" if="windows || mac || linux" unless="winrt || emscripten" />
+	<set name="LIME_SDL" value="1" />
 	<set name="LIME_VORBIS" value="1" />
 	<!-- <set name="LIME_VPX" value="1" />
 	<set name="LIME_WEBM" value="1" /> -->
@@ -53,11 +49,7 @@
 	<set name="NATIVE_TOOLKIT_HAVE_HARFBUZZ" value="1" if="LIME_HARFBUZZ" />
 	<set name="NATIVE_TOOLKIT_HAVE_MBEDTLS" value="1" if="LIME_MBEDTLS" />
 	<set name="NATIVE_TOOLKIT_HAVE_PNG" value="1" if="LIME_PNG" />
-	<set name="NATIVE_TOOLKIT_HAVE_SDL3" value="1" if="LIME_SDL3" unless="NATIVE_TOOLKIT_HAVE_SDL" />
-	<set name="NATIVE_TOOLKIT_HAVE_SDL" value="1" if="LIME_SDL" unless="NATIVE_TOOLKIT_HAVE_SDL3" />
-
-	<set name="NATIVE_TOOLKIT_SDL_STATIC" value="1" />
-	<set name="NATIVE_TOOLKIT_SDL_ANGLE" value="1" if="LIME_SDL_ANGLE" />
+	<set name="NATIVE_TOOLKIT_HAVE_SDL" value="1" if="LIME_SDL" />
 
 	<files id="lime">
 
@@ -213,8 +205,16 @@
 
 		<section if="LIME_OPENGL">
 
+			<section if="LIME_GLAD">
+
+				<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/glad/include/" />
+				<compilerflag value="-DLIME_GLAD" />
+
+			</section>
+
+			<compilerflag value="-DLIME_OPENGL_GL" if="windows || mac || linux" />
+			<compilerflag value="-DLIME_OPENGL_GLES2" if="android || rpi || emscripten || tizen || ios || tvos" />
 			<compilerflag value="-DLIME_OPENGL" />
-			<compilerflag value="-I${DEVELOPER_DIR}/Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS${TVOS_VER}.sdk/" if="tvos" />
 
 			<file name="src/graphics/opengl/OpenGLBindings.cpp" />
 
@@ -270,7 +270,6 @@
 			</section>
 
 			<compilerflag value="-DLIME_SDL" />
-			<compilerflag value="-DNATIVE_TOOLKIT_SDL_ANGLE" if="NATIVE_TOOLKIT_SDL_ANGLE" />
 			<compilerflag value="-D__IPHONEOS__" if="ios || tvos" />
 			<compilerflag value="-D__APPLETVOS__" if="tvos" />
 			<compilerflag value="-DAPPLETV" if="tvos" />
@@ -283,71 +282,6 @@
 			<file name="src/backend/sdl/SDLMutex.cpp" />
 			<file name="src/backend/sdl/SDLSystem.cpp" />
 			<file name="src/backend/sdl/SDLWindow.cpp" />
-
-		</section>
-
-		<section if="LIME_SDL3">
-
-			<section if="emscripten">
-
-				<compilerflag value="-s" />
-				<compilerflag value="USE_SDL=3" />
-
-			</section>
-
-			<section unless="emscripten">
-
-				<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl3/include/" />
-				<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl3/include/SDL3" />
-				<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl3/include/build-configs/" unless="windows || mac || linux || rpi" />
-				<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl3/include/build-configs/" if="linux" unless="rpi" />
-				<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl3/include/build-configs/" if="windows" unless="winrt" />
-				<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl3/include/build-configs/" if="mac" />
-				<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl3/include/build-configs/" if="rpi" />
-				<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl3/include/build-configs/" if="winrt" />
-
-				<compilerflag value="-DHAVE_LIBC" />
-
-			</section>
-
-			<section if="rpi">
-
-				<compilerflag value="-I/usr/include/libdrm" />
-				<compilerflag value="-I/usr/include/dbus-1.0" />
-				<compilerflag value="-I/usr/lib/arm-linux-gnueabihf/dbus-1.0/include" unless="HXCPP_ARM64" />
-				<compilerflag value="-I/usr/lib/aarch64-linux-gnu/dbus-1.0/include" if="HXCPP_ARM64" />
-				<compilerflag value="-I/usr/local/include" />
-
-				<compilerflag value="-ldrm" />
-				<compilerflag value="-lgbm" />
-
-				<compilerflag value="-Wl,--no-undefined -lm -ldl -ldrm -lpthread -lrt" />
-
-			</section>
-
-			<compilerflag value="-DLIME_SDL3" />
-			<compilerflag value="-DNATIVE_TOOLKIT_SDL_ANGLE" if="NATIVE_TOOLKIT_SDL_ANGLE" />
-			<compilerflag value="-D__IPHONEOS__" if="ios || tvos" />
-			<compilerflag value="-D__APPLETVOS__" if="tvos" />
-			<compilerflag value="-DAPPLETV" if="tvos" />
-			<compilerflag value="-DHAVE_STDIO_H" unless="windows" />
-
-			<file name="src/backend/sdl3/SDLApplication.cpp" />
-			<file name="src/backend/sdl3/SDLGamepad.cpp" />
-			<file name="src/backend/sdl3/SDLJoystick.cpp" />
-			<file name="src/backend/sdl3/SDLKeyCode.cpp" />
-			<file name="src/backend/sdl3/SDLMutex.cpp" />
-			<file name="src/backend/sdl3/SDLSystem.cpp" />
-			<file name="src/backend/sdl3/SDLWindow.cpp" />
-
-		</section>
-
-		<section if="LIME_TINYFILEDIALOGS">
-
-			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/tinyfiledialogs/" />
-			<compilerflag value="-DLIME_TINYFILEDIALOGS" />
-
-			<file name="src/ui/FileDialog.cpp" />
 
 		</section>
 
@@ -394,6 +328,7 @@
 		<file name="src/system/System.mm" if="ios" />
 		<file name="src/system/ValuePointer.cpp" />
 		<file name="src/ui/DropEvent.cpp" />
+		<file name="src/ui/FileDialog.cpp" />
 		<file name="src/ui/GamepadEvent.cpp" />
 		<file name="src/ui/Haptic.mm" if="ios" />
 		<file name="src/ui/JoystickEvent.cpp" />
@@ -423,6 +358,7 @@
 	<include name="lib/faudio-files.xml" if="LIME_FAUDIO" />
 	<include name="lib/freetype-files.xml" />
 	<include name="lib/harfbuzz-files.xml" />
+	<include name="lib/glad-files.xml" />
 	<include name="lib/jpeg-files.xml" />
 	<include name="lib/lzma-files.xml" />
 	<include name="lib/mbedtls-files.xml" />
@@ -432,9 +368,7 @@
 	<include name="lib/openal-files.xml" />
 	<include name="lib/pixman-files.xml" />
 	<include name="lib/png-files.xml" />
-	<include name="lib/sdl3-files.xml" unless="LIME_SDL" />
-	<include name="lib/sdl-files.xml" unless="LIME_SDL3" />
-	<include name="lib/tinyfiledialogs-files.xml" />
+	<include name="lib/sdl-files.xml" />
 	<include name="lib/vorbis-files.xml" />
 	<include name="lib/vpx-files.xml" />
 	<include name="lib/webm-files.xml" />
@@ -467,9 +401,8 @@
 		<files id="native-toolkit-openal" if="LIME_OPENALSOFT" />
 		<files id="native-toolkit-pixman" if="LIME_PIXMAN" />
 		<files id="native-toolkit-png" if="LIME_PNG" />
-		<files id="native-toolkit-sdl" if="LIME_SDL" unless="emscripten || LIME_SDL3" />
-		<files id="native-toolkit-sdl3" if="LIME_SDL3" unless="emscripten || LIME_SDL" />
-		<files id="native-toolkit-tinyfiledialogs" if="LIME_TINYFILEDIALOGS" />
+		<files id="native-toolkit-sdl" if="LIME_SDL" unless="emscripten" />
+		<files id="native-toolkit-glad" if="LIME_GLAD" />
 		<files id="native-toolkit-vorbis" if="LIME_VORBIS" />
 		<files id="native-toolkit-vpx" if="LIME_VPX" />
 		<files id="native-toolkit-webm" if="LIME_WEBM" />
@@ -543,8 +476,6 @@
 				<vflag name="-rpath" value="/opt/homebrew/lib" if="HXCPP_ARM64"/>
 
 				<vflag name="-l" value="iconv" />
-				<vflag name="-framework" value="IOKit" />
-				<vflag name="-framework" value="Foundation" />
 				<vflag name="-framework" value="AppKit" />
 				<vflag name="-framework" value="AudioToolbox" />
 				<vflag name="-framework" value="AudioUnit" />
@@ -553,16 +484,19 @@
 				<vflag name="-framework" value="Cocoa" />
 				<vflag name="-framework" value="QuartzCore" />
 				<vflag name="-framework" value="CoreAudio" />
+				<vflag name="-framework" value="CoreBluetooth" />
+				<vflag name="-framework" value="CoreHaptics" />
+				<vflag name="-framework" value="CoreMedia" />
 				<vflag name="-framework" value="CoreVideo" />
 				<vflag name="-framework" value="CoreMedia" />
      		    <vflag name="-framework" value="CoreHaptics" />
 				<vflag name="-framework" value="ForceFeedback" />
-				<vflag name="-framework" value="GameController" />
-				<vflag name="-framework" value="OpenAL" />
 				<vflag name="-framework" value="OpenGL" />
-				<vflag name="-framework" value="Metal" />
-				<vflag name="-framework" value="UniformTypeIdentifiers" />
+				<vflag name="-framework" value="Foundation" />
+				<vflag name="-framework" value="GameController" />
+				<vflag name="-framework" value="IOKit" />
 				<vflag name="-framework" value="SystemConfiguration" />
+				<vflag name="-framework" value="UniformTypeIdentifiers" />
 
 				<lib name="/opt/local/lib/libgc.a" if="LIME_NEKO" />
 				<lib name="-lm" if="LIME_NEKO" />
@@ -582,7 +516,6 @@
 				<lib name="-lm" />
 				<lib name="-lEGL" />
 				<lib name="-lGLESv2" />
-				<lib name="-lGLESv1_CM" />
 				<lib name="-lOpenSLES" />
 
 			</section>
@@ -599,53 +532,37 @@
 
 			<section if="tvos">
 
-				<vflag name="-framework" value="UIKit" />
-				<vflag name="-framework" value="Foundation" />
 				<vflag name="-framework" value="AudioToolbox" />
 				<vflag name="-framework" value="AudioUnit" />
 				<vflag name="-framework" value="AVFoundation" />
 				<vflag name="-framework" value="CoreAudio" />
-				<vflag name="-framework" value="CoreMotion" />
-				<vflag name="-framework" value="CoreText" />
+				<vflag name="-framework" value="CoreBluetooth" />
 				<vflag name="-framework" value="CoreVideo" />
-				<vflag name="-framework" value="CoreMedia" />
-     			<vflag name="-framework" value="CoreHaptics" />
-				<vflag name="-framework" value="ForceFeedback" />
+				<vflag name="-framework" value="Foundation" />
 				<vflag name="-framework" value="GameController" />
-				<vflag name="-framework" value="OpenAL" />
 				<vflag name="-framework" value="OpenGLES" />
-				<vflag name="-framework" value="Metal" />
-				<!-- <vflag name="-framework" value="CoreBluetooth" /> -->
+				<vflag name="-framework" value="UIKit" />
 
 				<lib name="-ldl" />
-				<lib name="-lEGL" />
-				<lib name="-lGLESv3" />
 
 			</section>
 
 			<section if="ios">
 
-				<vflag name="-framework" value="UIKit" />
-				<vflag name="-framework" value="Foundation" />
 				<vflag name="-framework" value="AudioToolbox" />
 				<vflag name="-framework" value="AudioUnit" />
 				<vflag name="-framework" value="AVFoundation" />
 				<vflag name="-framework" value="CoreAudio" />
+				<vflag name="-framework" value="CoreBluetooth" />
+				<vflag name="-framework" value="CoreMedia" />
 				<vflag name="-framework" value="CoreMotion" />
 				<vflag name="-framework" value="CoreText" />
 				<vflag name="-framework" value="CoreVideo" />
-				<vflag name="-framework" value="CoreMedia" />
-     			<vflag name="-framework" value="CoreHaptics" />
-				<vflag name="-framework" value="ForceFeedback" />
-				<vflag name="-framework" value="GameController" />
-				<vflag name="-framework" value="OpenAL" />
+				<vflag name="-framework" value="Foundation" />
 				<vflag name="-framework" value="OpenGLES" />
-				<vflag name="-framework" value="Metal" />
-				<!-- <vflag name="-framework" value="CoreBluetooth" /> -->
+				<vflag name="-framework" value="UIKit" />
 
 				<lib name="-ldl" />
-				<lib name="-lEGL" />
-				<lib name="-lGLESv3" />
 
 			</section>
 
@@ -661,6 +578,7 @@
 		<target id="lime-legacy" if="lime-legacy" />
 
 	</target>
-	<copyFile name="lime.lib" from="obj/lib/" overwrite="true" toolId="dll" if="windows LIME_HASHLINK" />
+	<copyFile name="lime.lib" from="obj/lib/" overwrite="true" toolId="dll" if="windows LIME_HASHLINK" unless="debug" />
+	<copyFile name="lime-debug.lib" from="obj/lib/" overwrite="true" toolId="dll" if="windows debug LIME_HASHLINK" />
 
 </xml>

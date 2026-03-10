@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "SDL3/SDL_main.h"
 
+extern "C" int SDL_RunApp(int argc, char *argv[], int (*mainFunction)(int argc, char *argv[]), void *reserved);
 extern "C" const char *hxRunLibrary ();
 extern "C" void hxcpp_set_top_of_stack ();
 
@@ -19,8 +20,7 @@ extern "C" int main (int argc, char *argv[]) {
 	::foreach ndlls::::if (registerStatics)::
 	::nameSafe::_register_prims ();::end::::end::
 
-	const char *err = NULL;
-	err = hxRunLibrary ();
+	const char *err = hxRunLibrary ();
 
 	if (err) {
 
@@ -30,5 +30,12 @@ extern "C" int main (int argc, char *argv[]) {
 	}
 
 	return 0;
+
+}
+
+
+extern "C" int main(int argc, char *argv[]) {
+
+	return SDL_RunApp (argc, argv, SDL_main, NULL);
 
 }

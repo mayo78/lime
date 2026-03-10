@@ -12,7 +12,7 @@ namespace lime {
 	static int id_modifier;
 	static int id_type;
 	static int id_windowID;
-	static int id_timestamp;
+	static double id_timestamp;
 	static int id_repeat;
 	static bool init = false;
 
@@ -23,7 +23,7 @@ namespace lime {
 		modifier = 0;
 		type = KEY_DOWN;
 		windowID = 0;
-		timestamp = 0;
+		timestamp = 0.0;
 
 	}
 
@@ -63,6 +63,7 @@ namespace lime {
 				eventObject->modifier = event->modifier;
 				eventObject->type = event->type;
 				eventObject->windowID = event->windowID;
+				eventObject->timestamp = event->timestamp;
 				eventObject->repeat = event->repeat;
 
 			}

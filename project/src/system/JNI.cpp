@@ -4,11 +4,7 @@
 #include <jni.h>
 #include <pthread.h>
 #include <android/log.h>
-#ifdef LIME_SDL3
 #include <SDL3/SDL.h>
-#else
-#include <SDL.h>
-#endif
 #include <map>
 #include <string>
 

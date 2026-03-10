@@ -36,8 +36,6 @@ public class GameActivity extends SDLActivity {
 
 	private static AssetManager assetManager;
 	private static List<Extension> extensions;
-	private static DisplayMetrics metrics;
-	private static DisplayCutout displayCutout;
 	private static Vibrator vibrator;
 	private static OrientationEventListener orientationListener;
 	private static HaxeObject deviceOrientationListener;
@@ -52,49 +50,6 @@ public class GameActivity extends SDLActivity {
 		{
 			deviceOrientationListener.call1("onOrientationChanged", deviceOrientation);
 		}
-
-	}
-
-	public static double getDisplayXDPI () {
-
-		if (metrics == null) {
-
-			metrics = Extension.mainContext.getResources ().getDisplayMetrics ();
-
-		}
-
-		return metrics.xdpi;
-
-	}
-
-	public static int[] getDisplaySafeAreaInsets () {
-
-		if (displayCutout == null) {
-
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-
-				WindowInsets windowInsets = ((GameActivity)Extension.mainContext).getWindow().getDecorView().getRootWindowInsets();
-
-				if (windowInsets != null) {
-
-					displayCutout = windowInsets.getDisplayCutout();
-
-				}
-			}
-		}
-
-		int[] result = {0, 0, 0, 0};
-
-		if (displayCutout != null) {
-
-			result[0] = displayCutout.getSafeInsetLeft();
-			result[1] = displayCutout.getSafeInsetTop();
-			result[2] = displayCutout.getSafeInsetRight();
-			result[3] = displayCutout.getSafeInsetBottom();
-
-		}
-
-		return result;
 
 	}
 
