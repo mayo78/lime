@@ -12,7 +12,7 @@ namespace lime {
 	static int id_modifier;
 	static int id_type;
 	static int id_windowID;
-	static double id_timestamp;
+	static uint64_t id_timestamp;
 	static int id_repeat;
 	static bool init = false;
 

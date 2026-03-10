@@ -13,7 +13,7 @@ namespace lime {
 	static int id_id;
 	static int id_type;
 	static int id_value;
-	static double id_timestamp;
+	static uint64_t id_timestamp;
 	static bool init = false;
 
 
