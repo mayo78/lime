@@ -215,21 +215,21 @@ class NativeApplication
 				var gamepad = Gamepad.devices.get(gamepadEventInfo.id);
 				if (gamepad != null) {
 					gamepad.onAxisMove.dispatch(gamepadEventInfo.axis, gamepadEventInfo.axisValue);
-					gamepad.onAxisMovePrecise.dispatch(gamepadEventInfo.axis, gamepadEventInfo.axisValue, Int64.fromFloat(gamepadEventInfo.timestamp));
+					gamepad.onAxisMovePrecise.dispatch(gamepadEventInfo.axis, gamepadEventInfo.axisValue, gamepadEventInfo.timestamp);
 				}
 
 			case BUTTON_DOWN:
 				var gamepad = Gamepad.devices.get(gamepadEventInfo.id);
 				if (gamepad != null) {
 					gamepad.onButtonDown.dispatch(gamepadEventInfo.button);
-					gamepad.onButtonDownPrecise.dispatch(gamepadEventInfo.button, Int64.fromFloat(gamepadEventInfo.timestamp));
+					gamepad.onButtonDownPrecise.dispatch(gamepadEventInfo.button, gamepadEventInfo.timestamp);
 				}
 
 			case BUTTON_UP:
 				var gamepad = Gamepad.devices.get(gamepadEventInfo.id);
 				if (gamepad != null) {
 					gamepad.onButtonUp.dispatch(gamepadEventInfo.button);
-					gamepad.onButtonUpPrecise.dispatch(gamepadEventInfo.button, Int64.fromFloat(gamepadEventInfo.timestamp));
+					gamepad.onButtonUpPrecise.dispatch(gamepadEventInfo.button, gamepadEventInfo.timestamp);
 				}
 
 			case CONNECT:
@@ -733,8 +733,6 @@ class NativeApplication
 	public var id:Int;
 	public var type:GamepadEventType;
 	public var axisValue:Float;
-	public var timestamp:Float;
-
 	public var timestamp:haxe.Int64 = 0;
 
 	public function new(type:GamepadEventType = null, id:Int = 0, button:Int = 0, axis:Int = 0, value:Float = 0, timestamp:Null<haxe.Int64> = null)

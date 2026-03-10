@@ -259,7 +259,7 @@ class NativeWindow
 		}
 	}
 
-	public function setVSync(mode:WindowVSyncMode):Bool
+	public function setVSync(mode:lime.ui.WindowVSyncMode):Bool
 	{
 		if (handle != null)
 		{

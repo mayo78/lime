@@ -666,6 +666,13 @@ namespace lime {
 	}
 
 
+	int System::GetTimerNS () {
+
+		return SDL_GetTicksNS ();
+
+	}
+
+
 	bool System::SetAllowScreenTimeout (bool allow) {
 
 		if (allow) {

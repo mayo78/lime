@@ -277,6 +277,8 @@ class NativeCFFI
 
 	@:cffi private static function lime_system_get_timer():Float;
 
+	@:cffi private static function lime_system_get_timer_ns():Int;
+
 	@:cffi private static function lime_system_open_file(path:String):Void;
 
 	@:cffi private static function lime_system_open_url(url:String, target:String):Void;
@@ -569,6 +571,7 @@ class NativeCFFI
 	private static var lime_system_get_platform_version = new cpp.Callable<Void->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_system_get_platform_version",
 		"o", false));
 	private static var lime_system_get_timer = new cpp.Callable<Void->Float>(cpp.Prime._loadPrime("lime", "lime_system_get_timer", "d", false));
+	private static var lime_system_get_timer_ns = new cpp.Callable<Void->Int>(cpp.Prime._loadPrime("lime", "lime_system_get_timer_ns", "i", false));
 	private static var lime_system_open_file = new cpp.Callable<String->cpp.Void>(cpp.Prime._loadPrime("lime", "lime_system_open_file", "sv", false));
 	private static var lime_system_open_url = new cpp.Callable<String->String->cpp.Void>(cpp.Prime._loadPrime("lime", "lime_system_open_url", "ssv", false));
 	private static var lime_text_event_manager_register = new cpp.Callable<cpp.Object->cpp.Object->cpp.Void>(cpp.Prime._loadPrime("lime",
@@ -768,6 +771,7 @@ class NativeCFFI
 	private static var lime_system_get_platform_name = CFFI.load("lime", "lime_system_get_platform_name", 0);
 	private static var lime_system_get_platform_version = CFFI.load("lime", "lime_system_get_platform_version", 0);
 	private static var lime_system_get_timer = CFFI.load("lime", "lime_system_get_timer", 0);
+	private static var lime_system_get_timer_ns = CFFI.load("lime", "lime_system_get_timer_ns", 0);
 	private static var lime_system_open_file = CFFI.load("lime", "lime_system_open_file", 1);
 	private static var lime_system_open_url = CFFI.load("lime", "lime_system_open_url", 2);
 	private static var lime_text_event_manager_register = CFFI.load("lime", "lime_text_event_manager_register", 2);
@@ -1274,6 +1278,11 @@ class NativeCFFI
 	}
 
 	@:hlNative("lime", "hl_system_get_timer") private static function lime_system_get_timer():Float
+	{
+		return 0;
+	}
+
+	@:hlNative("lime", "hl_system_get_timer_ns") private static function lime_system_get_timer_ns():Int
 	{
 		return 0;
 	}
