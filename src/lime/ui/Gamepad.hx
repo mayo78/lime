@@ -66,7 +66,7 @@ class Gamepad
 	public inline function rumble(lowFrequencyRumble:Float, highFrequencyRumble:Float, duration:Int):Void
 	{
 		#if (lime_cffi && !macro)
-		NativeCFFI.lime_gamepad_rumble(this.id, lowFrequencyRumble, highFrequencyRumble, duration);
+		//NativeCFFI.lime_gamepad_rumble(this.id, lowFrequencyRumble, highFrequencyRumble, duration);
 		#elseif (js && html5)
 		var actuator:Dynamic = (untyped __jsGamepad.vibrationActuator) ? untyped __jsGamepad.vibrationActuator
 			: (untyped __jsGamepad.hapticActuators) ? untyped __jsGamepad.hapticActuators[0]
