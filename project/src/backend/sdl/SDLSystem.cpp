@@ -349,6 +349,14 @@ namespace lime {
 			SDL_GetDisplayBounds (id, &bounds);
 			alloc_field (display, id_bounds, Rectangle (bounds.x, bounds.y, bounds.w, bounds.h).Value ());
 
+			Rectangle safeAreaInsets;
+			Display::GetSafeAreaInsets(id - 1, &safeAreaInsets);
+			alloc_field (display, id_safeArea,
+				Rectangle (bounds.x + safeAreaInsets.x,
+					bounds.y + safeAreaInsets.y,
+					bounds.w - safeAreaInsets.x - safeAreaInsets.width,
+					bounds.h - safeAreaInsets.y - safeAreaInsets.height).Value ());
+
 			const SDL_DisplayMode *displayMode = SDL_GetDesktopDisplayMode (id);
 
 			float dpi = 72.0f;
@@ -487,6 +495,14 @@ namespace lime {
 			hl_dyn_seti (_bounds, id_height, &hlt_i32, bounds.h);
 
 			hl_dyn_setp (display, id_bounds, &hlt_dynobj, _bounds);
+
+			Rectangle safeAreaInsets;
+			Display::GetSafeAreaInsets(id - 1, &safeAreaInsets);
+			vdynamic* _safeArea = (vdynamic*)hl_alloc_dynobj ();
+			hl_dyn_seti (_safeArea, id_x, &hlt_i32, bounds.x + safeAreaInsets.x);
+			hl_dyn_seti (_safeArea, id_y, &hlt_i32, bounds.y + safeAreaInsets.y);
+			hl_dyn_seti (_safeArea, id_width, &hlt_i32, bounds.w - safeAreaInsets.x - safeAreaInsets.width);
+			hl_dyn_seti (_safeArea, id_height, &hlt_i32, bounds.h - safeAreaInsets.y - safeAreaInsets.height);
 
 			const SDL_DisplayMode *displayMode = SDL_GetDesktopDisplayMode (id);
 
