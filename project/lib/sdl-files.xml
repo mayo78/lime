@@ -2,6 +2,12 @@
 
     <files id="native-toolkit-sdl-depends">
 
+        <!-- <section if="nx">    
+            
+        </section> -->
+
+        <!-- idk.. -->
+        
         <depend name="${NATIVE_TOOLKIT_PATH}/sdl/include/begin_code.h" />
         <depend name="${NATIVE_TOOLKIT_PATH}/sdl/include/close_code.h" />
         <depend name="${NATIVE_TOOLKIT_PATH}/sdl/include/SDL_assert.h" />

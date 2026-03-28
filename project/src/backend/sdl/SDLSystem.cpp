@@ -674,44 +674,36 @@ namespace lime {
 
 	}
 
-
-	FILE_HANDLE *fdopen (int fd, const char *mode) {
-
+	// A├▒adir esta condici├│n alrededor de toda la funci├│n lime::fdopen
 		#ifndef HX_WINDOWS
+#if !defined(__SWITCH__) && !defined(NX) && !defined(HX_NX)
 
+	FILE_HANDLE *fdopen(int fd, const char *mode)
+	{
 		System::GCEnterBlocking ();
 		FILE* fp = ::fdopen (fd, mode);
 		SDL_RWops *result = SDL_RWFromFP (fp, SDL_TRUE);
 		System::GCExitBlocking ();
 
-		if (result) {
-
+		if (result)
+		{
 			return new FILE_HANDLE (result);
-
+		}
+		return NULL;
 		}
 
-		return NULL;
+#endif // !defined(__SWITCH__) && !defined(NX) && !defined(HX_NX)
+#endif // HX_WINDOWS
 
-		#else
-
-		FILE* result;
-
-		System::GCEnterBlocking ();
-		result = ::fdopen (fd, mode);
-		System::GCExitBlocking ();
-
-		if (result) {
-
-			return new FILE_HANDLE (result);
-
-		}
-
-		return NULL;
-
-		#endif
-
+// Y en la secci├│n de Windows (o en una secci├│n espec├¡fica para Switch si no est├í definida como Windows)
+#if defined(__SWITCH__) || defined(NX) || defined(HX_NX)
+	// Definir una funci├│n vac├¡a o que devuelva NULL para Switch
+	FILE_HANDLE *fdopen(int fd, const char *mode)
+	{
+		// fdopen no est├í disponible o no se puede implementar f├ícilmente en Switch
+		return NULL; // Indicar fallo
 	}
-
+#endif
 
 	FILE_HANDLE *fopen (const char *filename, const char *mode) {
 

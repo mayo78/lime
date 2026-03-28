@@ -249,8 +249,9 @@ namespace lime {
 
 }
 
-
-#ifdef HX_LINUX
+// Condici├│n mejorada: Solo para Linux, no para Switch
+// Asegura que no se active en plataformas distintas de Linux real
+#if defined(HX_LINUX) && !defined(__SWITCH__) && !defined(NX) && !defined(HX_NX)
 
 // Improve compatibility with old glibc
 
@@ -258,21 +259,20 @@ namespace lime {
 #include <sys/select.h>
 #undef __fdelt_chk
 
-long int __fdelt_chk (long int d) {
+long int __fdelt_chk(long int d)
+{
 
-	if (d >= FD_SETSIZE) {
+	if (d >= FD_SETSIZE)
+	{
 
 		//printf("Select - bad fd.\n");
 		return 0;
-
 	}
 
 	return d / __NFDBITS;
-
 }
 
-#endif
-
+#endif // defined(HX_LINUX) && !defined(__SWITCH__) && !defined(NX) && !defined(HX_NX)
 
 #if defined(ANDROID) && !defined(HXCPP_CLANG)
 

@@ -526,6 +526,8 @@ namespace lime {
 			SDL_RendererInfo info;
 			SDL_GetRendererInfo (sdlRenderer, &info);
 
+			printf ("[SDLWindow] renderer: %s\n", info.name);
+
 			if (info.flags & SDL_RENDERER_SOFTWARE) {
 
 				return "software";

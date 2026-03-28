@@ -150,6 +150,9 @@ class HXProject extends Script
 			case WINDOWS, MAC, LINUX, AIR:
 				PlatformType.DESKTOP;
 
+			case SWITCH:
+				PlatformType.CONSOLE;
+
 			default:
 				// TODO: Better handling of platform type for pluggable targets
 				PlatformType.CONSOLE;
@@ -189,7 +192,7 @@ class HXProject extends Script
 		else
 		{
 			environment = Sys.environment();
-			for (conflict in ["air", "android", "cpp", "flash", "hl", "html5", "ios", "linux", "mac", "neko", "webassembly", "windows"])
+			for (conflict in ["air", "android", "cpp", "flash", "hl", "html5", "ios", "linux", "mac", "neko", "webassembly", "windows", "nx"])
 			{
 				environment.remove(conflict);
 			}
@@ -805,6 +808,11 @@ class HXProject extends Script
 			defines.set("buildType", "debug");
 			defines.set("debug", "1");
 		}
+		if (target == Platform.SWITCH && targetFlags.exists("cpp"))
+			{
+				defines.set("targetType", "cpp");
+				defines.set("cpp", "1");
+			}
 		else if (targetFlags.exists("final"))
 		{
 			defines.set("buildType", "final");

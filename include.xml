@@ -10,10 +10,10 @@
 	<define name="native" if="cpp || neko || nodejs || cs || java || hl" />
 	<define name="howlerjs" if="html5" />
 
-	<define name="lime-cairo" if="native" />
+	<define name="lime-cairo" if="native" unless="nx || HX_NX || switch"/>
 	<define name="lime-canvas" if="html5" />
 	<define name="lime-cffi" if="native" />
-	<define name="lime-curl" unless="lime-console || lime-switch || emscripten || flash || html5" />
+	<define name="lime-curl" unless="lime-console || switch || nx || HX_NX || emscripten || flash || html5" />
 	<define name="lime-dom" if="html5" />
 	<define name="lime-harfbuzz" if="native" />
 	<define name="lime-howlerjs" if="html5" />
@@ -45,8 +45,15 @@
 	<target name="vita" handler="lime-vita" />
 	<haxelib name="lime-vita" if="vita" />
 
-	<target name="switch" handler="lime-switch" />
-	<haxelib name="lime-switch" if="switch" />
+	<!-- <target name="switch" handler="lime-switch" />
+	<haxelib name="lime-switch" if="switch" /> -->
+
+	<!-- <section if="nx">
+		<set name="HXCPP_TOOLCHAIN_linux" value="1" />
+		<set name="nx" value="1" />
+		<set name="DEVKITPRO" value="D:/devkitPro" />
+		<set name="cpp" value="1" />
+	</section> -->
 
 	<target name="wiiu" handler="lime-wiiu" />
 	<haxelib name="lime-wiiu" if="wiiu" />
@@ -69,6 +76,7 @@
 		<target name="mac" path="tools/platforms/MacPlatform.hx" />
 		<target name="tvos" path="tools/platforms/TVOSPlatform.hx" />
 		<target name="windows" path="tools/platforms/WindowsPlatform.hx" />
+		<target name="nx" path="tools/platforms/SwitchPlatform.hx" />
 
 	</section>
 
@@ -86,7 +94,7 @@
 			<ndll name="zlib" haxelib="hxcpp" unless="emscripten || ios || tvos" />
 		</section>
 
-		<ndll name="lime" if="native" unless="lime-console static_link || lime-switch static_link" />
+		<ndll name="lime" if="native" unless="lime-console static_link || nx static_link" />
 
 		<dependency name="extension-api" path="dependencies/extension-api" if="android" />
 

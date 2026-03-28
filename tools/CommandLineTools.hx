@@ -291,6 +291,10 @@ class CommandLineTools
 							target = Platform.WEB_ASSEMBLY;
 							targetFlags.set("webassembly", "");
 
+						case "switch":
+							target = Platform.SWITCH;
+							targetFlags.set("cpp", "");
+
 						default:
 							target = cast targetName.toLowerCase();
 					}
@@ -514,6 +518,9 @@ class CommandLineTools
 					untyped $loader.path = $array(path + "Linux/", $loader.path);
 				}
 
+			// case SWITCH:
+			// 	untyped $loader.path = $array(path + "Switch/", $loader.path);
+
 			default:
 		}
 	}
@@ -627,6 +634,9 @@ class CommandLineTools
 
 				case AIR:
 					platform = new AIRPlatform(command, project, targetFlags);
+
+				case SWITCH:
+					platform = new SwitchPlatform(command, project, targetFlags);
 
 				default:
 			}
