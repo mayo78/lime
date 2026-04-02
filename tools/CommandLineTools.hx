@@ -155,10 +155,9 @@ class CommandLineTools
 
 				var targets = words[1].split(",");
 
-				var haxelib = null;
-				var path = null;
-				var hxmlPath = null;
-				var project = null;
+				var haxelib:Haxelib = null;
+				var path:String = null;
+				var hxmlPath:String = null;
 
 				if (!FileSystem.exists(words[0]))
 				{
@@ -323,7 +322,7 @@ class CommandLineTools
 						HXProject._targetFlags = targetFlags;
 						HXProject._userDefines = userDefines;
 
-						var project = null;
+						var project:HXProject = null;
 
 						if (haxelib != null)
 						{
@@ -673,8 +672,8 @@ class CommandLineTools
 		{
 			var colonIndex = words[0].indexOf(":");
 
-			var projectName = null;
-			var sampleName = null;
+			var projectName:String = null;
+			var sampleName:String = null;
 
 			if (colonIndex == -1)
 			{
@@ -1052,7 +1051,6 @@ class CommandLineTools
 			{
 				Log.println("  \x1b[3m(html5|flash|webassembly)\x1b[0m \x1b[1m-nolaunch\x1b[0m -- Begin test server without launching");
 				// Log.println ("  \x1b[3m(html5)\x1b[0m \x1b[1m-minify\x1b[0m -- Minify output using the Google Closure compiler");
-				// Log.println ("  \x1b[3m(html5)\x1b[0m \x1b[1m-minify -yui\x1b[0m -- Minify output using the YUI compressor");
 				Log.println("  \x1b[3m(html5|flash|webassembly)\x1b[0m \x1b[1m--port=\x1b[0;3mvalue\x1b[0m -- Set port for test server");
 			}
 
@@ -1652,7 +1650,7 @@ class CommandLineTools
 			if (environment.get("JAVA_HOME") != null)
 			{
 				var javaPath = Path.combine(environment.get("JAVA_HOME"), "bin");
-				var value;
+				var value:String;
 
 				if (System.hostPlatform == WINDOWS)
 				{
@@ -2009,7 +2007,7 @@ class CommandLineTools
 
 		if (!runFromHaxelib)
 		{
-			var path = null;
+			var path:String = null;
 
 			if (FileSystem.exists("tools.n"))
 			{
@@ -2259,17 +2257,12 @@ class CommandLineTools
 				{
 					if (argument.substr(0, 4) == "-arm")
 					{
-						try
-						{
-							var name = argument.substr(1).toUpperCase();
-							var value = Type.createEnum(Architecture, name);
+						var value = new Architecture(argument.substr(1));
 
-							if (value != null)
-							{
-								overrides.architectures.push(value);
-							}
+						if (value != null)
+						{
+							overrides.architectures.push(value);
 						}
-						catch (e:Dynamic) {}
 					}
 					else if (argument == "-64" || argument == "-x86_64")
 					{

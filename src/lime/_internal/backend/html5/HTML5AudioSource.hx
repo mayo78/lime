@@ -2,150 +2,250 @@ package lime._internal.backend.html5;
 
 import lime.math.Vector4;
 import lime.media.AudioSource;
+#if lime_howlerjs
+import js.html.audio.AnalyserNode;
+import js.html.audio.ChannelSplitterNode;
+import js.html.audio.MediaElementAudioSourceNode;
+import js.html.MediaElement;
+import js.lib.Float32Array;
+import lime.media.howlerjs.Howl;
+import lime.media.howlerjs.Howler;
+#end
 
 @:access(lime.media.AudioBuffer)
 class HTML5AudioSource
 {
+	public static function playSources(sources:Array<AudioSource>):Void
+	{
+		for (source in sources) source.play();
+	}
+
+	public static function pauseSources(sources:Array<AudioSource>):Void
+	{
+		for (source in sources) source.pause();
+	}
+
+	public static function stopSources(sources:Array<AudioSource>):Void
+	{
+		for (source in sources) source.stop();
+	}
+
+	public var parent:AudioSource;
+
 	private var completed:Bool;
 	private var gain:Float;
-	private var id:Int;
-	private var length:Int;
+	private var length:Float;
+	private var loopTime:Float;
 	private var loops:Int;
-	private var parent:AudioSource;
-	private var playing:Bool;
+	private var pan:Float;
+	private var pauseTime:Float;
+	private var peaks:Array<Float>;
+	private var pitch:Float;
 	private var position:Vector4;
+	#if lime_howlerjs
+	public var audioElementNode:MediaElementAudioSourceNode;
+	public var id:Int;
+	public var howl:Howl;
+
+	private var analyserLeft:AnalyserNode;
+	private var analyserRight:AnalyserNode;
+	private var channelSplitter:ChannelSplitterNode;
+	private var dataArrayLeft:Float32Array;
+	private var dataArrayRight:Float32Array;
+	private var mins:Array<Float>;
+	private var maxs:Array<Float>;
+	private var timerID:Int;
+	#end
 
 	public function new(parent:AudioSource)
 	{
 		this.parent = parent;
-
-		id = -1;
 		gain = 1;
-		position = new Vector4();
+		pan = 0;
+		pitch = 1;
+		#if lime_howlerjs
+		id = -1;
+		timerID = -1;
+		#end
 	}
 
-	public function dispose():Void {}
+	public function dispose():Void
+	{
+		#if lime_howlerjs
+		dataArrayLeft = null;
+		dataArrayRight = null;
+		mins = null;
+		maxs = null;
+		#end
+	}
 
-	public function init():Void {}
+	public function load():Void
+	{
+		#if lime_howlerjs
+		if (parent.buffer != null) howl = parent.buffer.__srcHowl;
+		if (howl != null) length = howl.duration() * 1000;
+		#end
+	}
+
+	public function unload():Void
+	{
+		// Howl sounds are automatically unloaded if it has stopped.
+		#if lime_howlerjs
+		disposeAnalyser();
+		howl = null;
+		id = -1;
+		#end
+		length = 0;
+		loopTime = 0;
+		pauseTime = 0;
+	}
+
+	private function disposeAnalyser():Void
+	{
+		#if lime_howlerjs
+		if (channelSplitter != null) channelSplitter.disconnect();
+		if (analyserLeft != null) analyserLeft.disconnect();
+		if (analyserRight != null) analyserRight.disconnect();
+		if (audioElementNode != null) audioElementNode.disconnect();
+		channelSplitter = null;
+		analyserLeft = null;
+		analyserRight = null;
+		audioElementNode = null;
+		#end
+	}
 
 	public function play():Void
 	{
 		#if lime_howlerjs
-		if (playing || parent.buffer == null || parent.buffer.__srcHowl == null)
-		{
-			return;
-		}
-
-		playing = true;
-
-		var time = getCurrentTime();
+		if (howl == null || (id != -1 && howl.playing(id))) return;
 
 		completed = false;
 
-		var cacheVolume = untyped parent.buffer.__srcHowl._volume;
-		untyped parent.buffer.__srcHowl._volume = parent.gain;
+		var prevId = id;
+		if (prevId == -1) id = howl.play();
+		else
+		{
+			id = howl.play(prevId);
+			if (prevId != id) disposeAnalyser();
+		}
 
-		id = parent.buffer.__srcHowl.play();
+		updateLoop();
+		howl.volume(gain, id);
+		howl.seek((pauseTime + parent.offset) / 1000, id);
 
-		untyped parent.buffer.__srcHowl._volume = cacheVolume;
-		// setGain (parent.gain);
-
-		setPosition(parent.position);
-
-		parent.buffer.__srcHowl.on("end", howl_onEnd, id);
-
-		// Calling setCurrentTime causes html5 audio to replay from this position on next frame
-		#if force_html5_audio
-		if (time == 0) setCurrentTime(time);
-		#else
-		setCurrentTime(time);
-		#end
+		resetTimer(Std.int((length - pauseTime - parent.offset) / howl.rate(id)));
 		#end
 	}
 
 	public function pause():Void
 	{
 		#if lime_howlerjs
-		playing = false;
-
-		if (parent.buffer != null && parent.buffer.__srcHowl != null)
+		if (howl != null && id != -1)
 		{
-			parent.buffer.__srcHowl.pause(id);
+			pauseTime = howl.seek(id) * 1000;
+			howl.pause(id);
 		}
+		else
+		{
+			pauseTime = 0;
+		}
+		stopTimer();
 		#end
 	}
 
 	public function stop():Void
 	{
-		#if lime_howlerjs
-		playing = false;
+		pauseTime = 0;
 
-		if (parent.buffer != null && parent.buffer.__srcHowl != null)
+		#if lime_howlerjs
+		if (howl != null && id != -1)
 		{
-			parent.buffer.__srcHowl.stop(id);
-			parent.buffer.__srcHowl.off("end", howl_onEnd, id);
+			howl.stop(id);
+		}
+		stopTimer();
+		#end
+	}
+
+	public function prepare(time:Float):Void {}
+
+	// Event Handlers
+	private inline function stopTimer():Void
+	{
+		#if lime_howlerjs
+		if (timerID != -1)
+		{
+			untyped clearInterval(timerID);
+			timerID = -1;
 		}
 		#end
 	}
 
-	// Event Handlers
-	private function howl_onEnd()
+	private inline function resetTimer(ms:Int):Void
 	{
 		#if lime_howlerjs
-		playing = false;
+		stopTimer();
+
+		var me = this;
+		timerID = untyped setInterval(function() me.complete(), ms);
+		#end
+	}
+
+	private function complete()
+	{
+		#if lime_howlerjs
+		howl.stop(id);
 
 		if (loops > 0)
 		{
+			var wasLooping = howl.loop(id);
 			loops--;
-			stop();
-			// currentTime = 0;
-			play();
-			return;
+			updateLoop();
+			if (!wasLooping)
+			{
+				howl.seek((loopTime + parent.offset) / 1000, id);
+				howl.play(id);
+			}
+			pauseTime = loopTime;
+			resetTimer(Std.int((length - loopTime - parent.offset) / howl.rate(id)));
 		}
-		else if (parent.buffer != null && parent.buffer.__srcHowl != null)
+		else
 		{
-			parent.buffer.__srcHowl.stop(id);
-			parent.buffer.__srcHowl.off("end", howl_onEnd, id);
+			stopTimer();
+			completed = true;
+			pauseTime = 0;
 		}
 
-		completed = true;
 		parent.onComplete.dispatch();
 		#end
 	}
 
 	// Get & Set Methods
-	public function getCurrentTime():Int
+	public function getCurrentTime():Float
 	{
-		if (id == -1)
-		{
-			return 0;
-		}
-
 		#if lime_howlerjs
 		if (completed)
 		{
-			return getLength();
+			return length - parent.offset;
 		}
-		else if (parent.buffer != null && parent.buffer.__srcHowl != null)
+		else if (howl != null && id != -1)
 		{
-			var time = Std.int(parent.buffer.__srcHowl.seek(id) * 1000) - parent.offset;
-			if (time < 0) return 0;
-			return time;
+			return howl.seek(id) * 1000 - parent.offset;
 		}
 		#end
 
-		return 0;
+		return pauseTime - parent.offset;
 	}
 
-	public function setCurrentTime(value:Int):Int
+	public function setCurrentTime(value:Float):Float
 	{
+		pauseTime = value + parent.offset;
+
 		#if lime_howlerjs
-		if (parent.buffer != null && parent.buffer.__srcHowl != null)
+		if (howl != null && id != -1)
 		{
-			// if (playing) buffer.__srcHowl.play (id);
-			var pos = (value + parent.offset) / 1000;
-			if (pos < 0) pos = 0;
-			parent.buffer.__srcHowl.seek(pos, id);
+			if (pauseTime < 0 || !Math.isFinite(pauseTime)) pauseTime = 0;
+			else if (pauseTime > length) pauseTime = length;
+			howl.seek(pauseTime / 1000, id);
 		}
 		#end
 
@@ -160,38 +260,65 @@ class HTML5AudioSource
 	public function setGain(value:Float):Float
 	{
 		#if lime_howlerjs
-		// set howler volume only if we have an active id.
-		// Passing -1 might create issues in future play()'s.
-
-		if (parent.buffer != null && parent.buffer.__srcHowl != null && id != -1)
+		if (howl != null && id != -1)
 		{
-			parent.buffer.__srcHowl.volume(value, id);
+			howl.volume(value, id);
 		}
 		#end
-
 		return gain = value;
 	}
 
-	public function getLength():Int
+	public function getLatency():Float
 	{
-		if (length != 0)
-		{
-			return length;
-		}
-
-		#if lime_howlerjs
-		if (parent.buffer != null && parent.buffer.__srcHowl != null)
-		{
-			return Std.int(parent.buffer.__srcHowl.duration() * 1000);
-		}
-		#end
-
 		return 0;
 	}
 
-	public function setLength(value:Int):Int
+	public function getLength():Float
 	{
-		return length = value;
+		if (length <= parent.offset) return 0;
+		return length - parent.offset;
+	}
+
+	public function setLength(value:Float):Float
+	{
+		length = value + parent.offset;
+
+		#if lime_howlerjs
+		if (howl != null)
+		{
+			var duration = howl.duration() * 1000;
+			if (length <= 0 || length >= duration) length = duration;
+			if (id != -1 && howl.playing(id)) resetTimer(Std.int((length - howl.seek(id) * 1000) / howl.rate(id)));
+		}
+		#end
+		updateLoop();
+
+		return value;
+	}
+
+	public function getLoopTime():Float
+	{
+		if (loopTime <= parent.offset) return 0;
+		return loopTime - parent.offset;
+	}
+
+	public function setLoopTime(value:Float):Float
+	{
+		loopTime = value + parent.offset;
+
+		#if lime_howlerjs
+		if (howl != null)
+		{
+			if (loopTime < 0) loopTime = 0;
+			else
+			{
+				var duration = howl.duration() * 1000;
+				if (loopTime >= duration) loopTime = duration;
+			}
+		}
+		#end
+		updateLoop();
+		return value;
 	}
 
 	public function getLoops():Int
@@ -201,55 +328,150 @@ class HTML5AudioSource
 
 	public function setLoops(value:Int):Int
 	{
-		return loops = value;
+		loops = value;
+		updateLoop();
+		return value;
+	}
+
+	private function updateLoop()
+	{
+		#if lime_howlerjs
+		if (howl != null && id != -1)
+		{
+			var duration = howl.duration() * 1000;
+			howl.loop(loops > 0 && loopTime <= 0 && length >= duration, id);
+		}
+		#end
+	}
+
+	public function getPan():Float
+	{
+		return pan;
+	}
+
+	public function setPan(value:Float):Float
+	{
+		#if lime_howlerjs
+		if (howl != null && id != -1)
+		{
+			position.setTo(value, 0, -Math.sqrt(1 - value * value));
+			//howl.pos(0, 0, 0, id);
+			howl.stereo(value, id);
+		}
+		#end
+		return pan = value;
 	}
 
 	public function getPitch():Float
 	{
-		#if lime_howlerjs
-		return parent.buffer.__srcHowl.rate();
-		#else
-		return 1;
-		#end
+		return pitch;
 	}
 
 	public function setPitch(value:Float):Float
 	{
 		#if lime_howlerjs
-		parent.buffer.__srcHowl.rate(value);
+		if (howl != null && id != -1)
+		{
+			howl.rate(value, id);
+			resetTimer(Std.int((length - howl.seek(id) * 1000) / howl.rate(id)));
+		}
 		#end
-		
-		return getPitch();
+		return pitch = value;
 	}
-	
+
+	public function getPlaying():Bool
+	{
+		#if lime_howlerjs
+		if (howl != null && id != -1) return howl.playing(id);
+		#end
+		return false;
+	}
 
 	public function getPosition():Vector4
 	{
-		#if lime_howlerjs
-		// This should work, but it returns null (But checking the inside of the howl, the _pos is actually null... so ¯\_(ツ)_/¯)
-		/*
-			var arr = parent.buffer.__srcHowl.pos())
-			position.x = arr[0];
-			position.y = arr[1];
-			position.z = arr[2];
-		 */
-		#end
-
+		if (position == null) position = new Vector4();
 		return position;
 	}
 
 	public function setPosition(value:Vector4):Vector4
 	{
-		position.x = value.x;
-		position.y = value.y;
-		position.z = value.z;
-		position.w = value.w;
+		if (position == null) position = new Vector4();
+		position.setTo(value.x, value.y, value.z);
 
-		#if lime_howlerjs
-		if (parent.buffer != null && parent.buffer.__srcHowl != null && parent.buffer.__srcHowl.pos != null) parent.buffer.__srcHowl.pos(position.x, position.y, position.z, id);
-		// There are more settings to the position of the sound on the "pannerAttr()" function of howler. Maybe somebody who understands sound should look into it?
-		#end
+		/*#if lime_howlerjs
+		if (howl != null && id != -1)
+		{
+			howl.pos(position.x, position.y, position.z, id);
+		}
+		#end*/
 
 		return position;
+	}
+
+	public function getPeaks(offsetMs:Float):Array<Float>
+	{
+		if (peaks == null) peaks = [0, 0];
+
+		#if lime_howlerjs
+		if (howl == null || id == -1 || !howl.playing(id))
+		{
+			for (i in 0...2) peaks[i] = 0;
+			return peaks;
+		}
+
+		if (channelSplitter == null)
+		{
+			var node = untyped howl._soundById(id)._node;
+
+			//html5 audios is extremely buggy.
+			if ((node is MediaElement))
+			{
+				for (i in 0...2) peaks[i] = 0;
+				return peaks;
+			}
+			/*if ((node is MediaElement))
+			{
+				audioElementNode = Howler.ctx.createMediaElementSource(untyped node);
+				audioElementNode.connect(untyped Howler.ctx.destination);
+				node = audioElementNode;
+			}
+			else*/
+			if (untyped node.bufferSource) node = untyped node.bufferSource;
+
+			var ctx = untyped node.context;
+			channelSplitter = new ChannelSplitterNode(untyped ctx, {numberOfOutputs: 2});
+			analyserLeft = new AnalyserNode(untyped ctx);
+			analyserRight = new AnalyserNode(untyped ctx);
+			analyserLeft.fftSize = analyserRight.fftSize = 2048;
+			analyserLeft.maxDecibels = analyserRight.maxDecibels = 0;
+			analyserLeft.minDecibels = analyserRight.minDecibels = -120;
+
+			untyped node.connect(channelSplitter);
+			channelSplitter.connect(analyserLeft, 0);
+			channelSplitter.connect(analyserRight, 1);
+		}
+
+		if (dataArrayLeft == null) dataArrayLeft = new Float32Array(2048);
+		if (dataArrayRight == null) dataArrayRight = new Float32Array(2048);
+
+		analyserLeft.getFloatTimeDomainData(dataArrayLeft);
+		analyserRight.getFloatTimeDomainData(dataArrayRight);
+
+		if (mins == null)
+		{
+			mins = [for (i in 0...2) -1];
+			maxs = [for (i in 0...2) -1];
+		}
+		else
+		{
+			for (i in 0...2) maxs[i] = mins[i] = -1;
+		}
+
+		for (v in dataArrayLeft) ((v > maxs[0]) ? (maxs[0] = v) : (if (-v > mins[0]) (mins[0] = -v)));
+		for (v in dataArrayRight) ((v > maxs[1]) ? (maxs[1] = v) : (if (-v > mins[1]) (mins[1] = -v)));
+
+		for (i in 0...2) peaks[i] = (maxs[i] + mins[i]) * 0.5;
+		#end
+		return peaks;
 	}
 }

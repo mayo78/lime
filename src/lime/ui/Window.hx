@@ -8,6 +8,7 @@ import lime.graphics.RenderContextAttributes;
 import lime.math.Rectangle;
 import lime.system.Display;
 import lime.system.DisplayMode;
+import lime.ui.NiceKeyEventInfo;
 #if (js && html5)
 import js.html.Element;
 #end
@@ -37,6 +38,7 @@ class Window
 	#if (!lime_doc_gen || (js && html5))
 	public var element(default, null):#if (js && html5) Element #else Dynamic #end;
 	#end
+	public var nativeHandle(get, null):Dynamic;
 
 	/**
 	 * The current frame rate (measured in frames-per-second) of the window.
@@ -60,7 +62,11 @@ class Window
 	public var onActivate(default, null) = new Event<Void->Void>();
 	public var onClose(default, null) = new Event<Void->Void>();
 	public var onDeactivate(default, null) = new Event<Void->Void>();
-	public var onDropFile(default, null) = new Event<String->Void>();
+	public var onDropFile(default, null) = new Event<String->String->Float->Float->Void>();
+	public var onDropText(default, null) = new Event<String->String->Float->Float->Void>();
+	public var onDropBegin(default, null) = new Event<Void->Void>();
+	public var onDropComplete(default, null) = new Event<Float->Float->Void>();
+	public var onDropPosition(default, null) = new Event<Float->Float->Void>();
 	public var onEnter(default, null) = new Event<Void->Void>();
 	public var onExpose(default, null) = new Event<Void->Void>();
 	public var onFocusIn(default, null) = new Event<Void->Void>();
@@ -78,6 +84,9 @@ class Window
 	**/
 	public var onKeyUp(default, null) = new Event<KeyCode->KeyModifier->Void>();
 
+	public var onKeyDownPrecise(default, null) = new Event<KeyCode->KeyModifier->haxe.Int64->Void>();
+	public var onKeyUpPrecise(default, null) = new Event<KeyCode->KeyModifier->haxe.Int64->Void>();
+	public var onKeyEvent(default, null) = new Event<NiceKeyEventInfo->Void>();
 	public var onLeave(default, null) = new Event<Void->Void>();
 
 	/**
@@ -139,6 +148,7 @@ class Window
 	public var textInputEnabled(get, set):Bool;
 	public var title(get, set):String;
 	public var visible(get, set):Bool;
+	public var vsync(get, set):WindowVSyncMode;
 	public var width(get, set):Int;
 	public var x(get, set):Int;
 	public var y(get, set):Int;
@@ -159,7 +169,7 @@ class Window
 	@:noCompletion private var __resizable:Bool;
 	@:noCompletion private var __scale:Float;
 	@:noCompletion private var __title:String;
-	@:noCompletion private var __visible:Bool;
+	@:noCompletion private var __vsync:WindowVSyncMode;
 	@:noCompletion private var __width:Int;
 	@:noCompletion private var __x:Int;
 	@:noCompletion private var __y:Int;
@@ -211,9 +221,16 @@ class Window
 		__height = 0;
 		__fullscreen = false;
 		__scale = 1;
+		__vsync = ((__attributes.context != null && Reflect.hasField(__attributes.context, "vsync")) ? (__attributes.context.vsync ? ON : OFF) : OFF);
 		__x = 0;
 		__y = 0;
 		__title = Reflect.hasField(__attributes, "title") ? __attributes.title : "";
+		__hidden = false;
+		__borderless = Reflect.hasField(__attributes, "borderless") ? __attributes.borderless : false;
+		__resizable = Reflect.hasField(__attributes, "resizable") ? __attributes.resizable : false;
+		__maximized = Reflect.hasField(__attributes, "maximized") ? __attributes.maximized : false;
+		__minimized = Reflect.hasField(__attributes, "minimized") ? __attributes.minimized : false;
+
 		id = -1;
 
 		__backend = new WindowBackend(this);
@@ -423,9 +440,9 @@ class Window
 		#end
 	}
 
-	public function alert(message:String = null, title:String = null):Void
+	public function alert(?type:MessageBoxType = INFORMATION, message:String = null, title:String = null, buttons:Array<String> = null):Int
 	{
-		__backend.alert(message, title);
+		return __backend.alert(type, message, title, buttons);
 	}
 
 	public function close():Void
@@ -436,6 +453,15 @@ class Window
 	public function focus():Void
 	{
 		__backend.focus();
+	}
+
+	/**
+	 * Sets the swap interval for the current window.
+	 * @return `false` if the swap interval could not be set
+	**/
+	public function setVSyncMode(mode:lime.ui.WindowVSyncMode):Bool
+	{
+		return __backend.setVSync(mode);
 	}
 
 	public function move(x:Int, y:Int):Void
@@ -542,6 +568,11 @@ class Window
 	@:noCompletion private function set_displayMode(value:DisplayMode):DisplayMode
 	{
 		return __backend.setDisplayMode(value);
+	}
+
+	@:noCompletion private function get_nativeHandle():Dynamic
+	{
+		return __backend.getNativeHandle();
 	}
 
 	@:noCompletion private inline function get_borderless():Bool
@@ -721,13 +752,24 @@ class Window
 
 	@:noCompletion private inline function get_visible():Bool
 	{
-		return __visible;
+		return !__hidden;
 	}
 
 	@:noCompletion private function set_visible(value:Bool):Bool
 	{
-		__visible = __backend.setVisible(value);
-		return __visible;
+		__hidden = !__backend.setVisible(value);
+		return !__hidden;
+	}
+
+	@:noCompletion private inline function get_vsync():WindowVSyncMode
+	{
+		return __vsync;
+	}
+
+	@:noCompletion private inline function set_vsync(value:WindowVSyncMode):WindowVSyncMode
+	{
+		__backend.setVSync(value);
+		return __vsync = value;
 	}
 
 	@:noCompletion private inline function get_width():Int

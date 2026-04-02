@@ -68,6 +68,7 @@ class HTML5Platform extends PlatformTarget
 				hardware: true,
 				display: 0,
 				resizable: true,
+				transparent: false,
 				borderless: false,
 				orientation: Orientation.AUTO,
 				vsync: false,
@@ -302,7 +303,7 @@ class HTML5Platform extends PlatformTarget
 			}
 		}
 
-		var fontPath;
+		var fontPath:String;
 
 		for (asset in project.assets)
 		{
@@ -353,6 +354,11 @@ class HTML5Platform extends PlatformTarget
 			project.haxeflags.push("-xml " + targetDirectory + "/types.xml");
 		}
 
+		if (project.targetFlags.exists("json"))
+		{
+			project.haxeflags.push("--json " + targetDirectory + "/types.json");
+		}
+
 		if (Log.verbose)
 		{
 			project.haxedefs.set("verbose", 1);
@@ -372,7 +378,7 @@ class HTML5Platform extends PlatformTarget
 
 		if (npm)
 		{
-			var path;
+			var path:String;
 			for (i in 0...project.sources.length)
 			{
 				path = project.sources[i];
@@ -444,7 +450,7 @@ class HTML5Platform extends PlatformTarget
 		}
 
 		var createdDirectories = new Map<String, Bool>();
-		var dir = null;
+		var dir:String = null;
 
 		for (asset in project.assets)
 		{
@@ -470,7 +476,7 @@ class HTML5Platform extends PlatformTarget
 
 					var hasFormat = [false, false, false, false];
 					var extensions = [ext, ".eot", ".svg", ".woff"];
-					var extension;
+					var extension:String;
 
 					for (i in 0...extensions.length)
 					{
@@ -508,7 +514,7 @@ class HTML5Platform extends PlatformTarget
 
 							if (shouldEmbedFont)
 							{
-								var urls = [];
+								var urls:Array<String> = [];
 								if (hasFormat[1]) urls.push("url('" + embeddedAsset.targetPath + ".eot?#iefix') format('embedded-opentype')");
 								if (hasFormat[3]) urls.push("url('" + embeddedAsset.targetPath + ".woff') format('woff')");
 								urls.push("url('" + embeddedAsset.targetPath + ext + "') format('truetype')");

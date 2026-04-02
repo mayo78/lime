@@ -1,21 +1,24 @@
 #ifndef LIME_UI_WINDOW_H
 #define LIME_UI_WINDOW_H
 
-
-#ifdef CreateWindow
-#undef CreateWindow
-#endif
-
 #include <app/Application.h>
 #include <graphics/ImageBuffer.h>
 #include <math/Rectangle.h>
 #include <system/CFFI.h>
 #include <system/DisplayMode.h>
+#include <ui/Cursor.h>
 #include <stdint.h>
 
 
 namespace lime {
 
+	enum WindowVSyncMode {
+
+		WINDOW_VSYNC_ADAPTIVE = -1,
+		WINDOW_VSYNC_OFF = 0,
+		WINDOW_VSYNC_ON = 1,
+
+	};
 
 	class Window {
 
@@ -24,13 +27,15 @@ namespace lime {
 
 			virtual ~Window () {};
 
-			virtual void Alert (const char* message, const char* title) = 0;
+			virtual int Alert (int type, const char* message, const char* title, const char** buttons, int count) = 0;
+			virtual bool SetVSync (int mode) = 0;
 			virtual void Close () = 0;
 			virtual void ContextFlip () = 0;
 			virtual void* ContextLock (bool useCFFIValue) = 0;
 			virtual void ContextMakeCurrent () = 0;
 			virtual void ContextUnlock () = 0;
 			virtual void Focus () = 0;
+			virtual void* GetHandle () = 0;
 			virtual void* GetContext () = 0;
 			virtual const char* GetContextType () = 0;
 			// virtual Cursor GetCursor () = 0;
@@ -73,31 +78,31 @@ namespace lime {
 	};
 
 
-	Window* CreateWindow (Application* application, int width, int height, int flags, const char* title);
+	Window* MakeWindow (Application* application, int width, int height, int flags, const char* title);
 
 
 	enum WindowFlags {
 
 		WINDOW_FLAG_FULLSCREEN = 0x00000001,
-		WINDOW_FLAG_BORDERLESS = 0x00000002,
-		WINDOW_FLAG_RESIZABLE = 0x00000004,
-		WINDOW_FLAG_HARDWARE = 0x00000008,
-		WINDOW_FLAG_VSYNC = 0x00000010,
-		WINDOW_FLAG_HW_AA = 0x00000020,
-		WINDOW_FLAG_HW_AA_HIRES = 0x00000060,
-		WINDOW_FLAG_ALLOW_SHADERS = 0x00000080,
-		WINDOW_FLAG_REQUIRE_SHADERS = 0x00000100,
-		WINDOW_FLAG_DEPTH_BUFFER = 0x00000200,
-		WINDOW_FLAG_STENCIL_BUFFER = 0x00000400,
-		WINDOW_FLAG_ALLOW_HIGHDPI = 0x00000800,
-		WINDOW_FLAG_HIDDEN = 0x00001000,
-		WINDOW_FLAG_MINIMIZED = 0x00002000,
-		WINDOW_FLAG_MAXIMIZED = 0x00004000,
-		WINDOW_FLAG_ALWAYS_ON_TOP = 0x00008000,
-		WINDOW_FLAG_COLOR_DEPTH_32_BIT = 0x00010000
+		WINDOW_FLAG_TRANSPARENT = 0x00000002,
+		WINDOW_FLAG_BORDERLESS = 0x00000004,
+		WINDOW_FLAG_RESIZABLE = 0x00000008,
+		WINDOW_FLAG_HARDWARE = 0x00000010,
+		WINDOW_FLAG_VSYNC = 0x00000020,
+		WINDOW_FLAG_HW_AA = 0x00000040,
+		WINDOW_FLAG_HW_AA_HIRES = 0x000000C0,
+		WINDOW_FLAG_ALLOW_SHADERS = 0x00000100,
+		WINDOW_FLAG_REQUIRE_SHADERS = 0x00000200,
+		WINDOW_FLAG_DEPTH_BUFFER = 0x00000400,
+		WINDOW_FLAG_STENCIL_BUFFER = 0x00000800,
+		WINDOW_FLAG_ALLOW_HIGHDPI = 0x00001000,
+		WINDOW_FLAG_HIDDEN = 0x00002000,
+		WINDOW_FLAG_MINIMIZED = 0x00004000,
+		WINDOW_FLAG_MAXIMIZED = 0x00008000,
+		WINDOW_FLAG_ALWAYS_ON_TOP = 0x00010000,
+		WINDOW_FLAG_COLOR_DEPTH_32_BIT = 0x00020000
 
 	};
-
 }
 
 

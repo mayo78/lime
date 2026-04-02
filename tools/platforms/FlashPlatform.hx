@@ -19,11 +19,7 @@ import lime.tools.PlatformTarget;
 import sys.io.File;
 import sys.FileSystem;
 #if neko
-#if haxe4
 import sys.thread.Thread;
-#else
-import neko.vm.Thread;
-#end
 #end
 class FlashPlatform extends PlatformTarget
 {
@@ -69,6 +65,7 @@ class FlashPlatform extends PlatformTarget
 				hardware: true,
 				display: 0,
 				resizable: true,
+				transparent: false,
 				borderless: false,
 				orientation: Orientation.AUTO,
 				vsync: false,
@@ -137,6 +134,11 @@ class FlashPlatform extends PlatformTarget
 		if (project.targetFlags.exists("xml"))
 		{
 			project.haxeflags.push("-xml " + targetDirectory + "/types.xml");
+		}
+
+		if (project.targetFlags.exists("json"))
+		{
+			project.haxeflags.push("--json " + targetDirectory + "/types.json");
 		}
 
 		if (Log.verbose)
@@ -275,7 +277,10 @@ class FlashPlatform extends PlatformTarget
 		if (embedded)
 		{
 			var files = ["debug.hxml", "release.hxml", "final.hxml"];
-			var path, hxml, lines, output;
+			var path:String;
+			var hxml:String;
+			var lines:Array<String>;
+			var output:Array<String>;
 
 			for (file in files)
 			{

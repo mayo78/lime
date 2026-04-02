@@ -1,6 +1,13 @@
 #include <system/CFFI.h>
 #include <system/ValuePointer.h>
 
+#ifndef LIME_NX
+#error "what"
+#endif
+
+#ifndef LIME_SDL2
+#error "what"
+#endif
 
 namespace lime {
 

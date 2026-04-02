@@ -308,7 +308,8 @@ class HTML5HTTPRequest
 		if (parent.enableResponseHeaders)
 		{
 			parent.responseHeaders = [];
-			var name, value;
+			var name:String;
+			var value:String;
 
 			for (line in request.getAllResponseHeaders().split("\n"))
 			{
@@ -444,7 +445,7 @@ class HTML5HTTPRequest
 
 	private static function __loadImage(uri:String, promise:Promise<Image>, options:Int):Void
 	{
-		var image:JSImage = untyped #if haxe4 js.Syntax.code #else __js__ #end ('new window.Image ()');
+		var image:JSImage = untyped js.Syntax.code('new window.Image ()');
 
 		if (!__isSameOrigin(uri))
 		{
@@ -453,7 +454,7 @@ class HTML5HTTPRequest
 
 		if (supportsImageProgress == null)
 		{
-			supportsImageProgress = untyped #if haxe4 js.Syntax.code #else __js__ #end ("'onprogress' in image");
+			supportsImageProgress = untyped js.Syntax.code("'onprogress' in image");
 		}
 
 		if (supportsImageProgress || __isInMemoryURI(uri))

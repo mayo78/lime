@@ -4,7 +4,7 @@
 	shallow = true
 [submodule "project/lib/sdl"]
 	path = project/lib/sdl
-	url = https://github.com/libsdl-org/SDL
+	url = https://github.com/FunkinCrew/SDL
 	shallow = true
 [submodule "project/lib/openal"]
 	path = project/lib/openal
@@ -46,6 +46,7 @@
 	path = project/lib/cairo
 	url = https://gitlab.freedesktop.org/cairo/cairo.git
 	shallow = true
+	depth = 1
 [submodule "project/lib/pixman"]
 	path = project/lib/pixman
 	url = https://gitlab.freedesktop.org/pixman/pixman.git
@@ -53,10 +54,6 @@
 [submodule "project/lib/lzma"]
 	path = project/lib/lzma
 	url = https://github.com/openfl/liblzma
-	shallow = true
-[submodule "project/lib/tinyfiledialogs"]
-	path = project/lib/tinyfiledialogs
-	url = https://github.com/openfl/libtinyfiledialogs
 	shallow = true
 [submodule "project/lib/efsw"]
 	path = project/lib/efsw
@@ -81,4 +78,8 @@
 [submodule "project/lib/hashlink"]
 	path = project/lib/hashlink
 	url = https://github.com/HaxeFoundation/hashlink
+	shallow = true
+[submodule "project/lib/dr_libs"]
+	path = project/lib/dr_libs
+	url = https://github.com/mackron/dr_libs
 	shallow = true

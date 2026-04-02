@@ -18,11 +18,18 @@ class AndroidHelper
 			Sys.putEnv("ANDROID_SDK", project.environment.get("ANDROID_SDK"));
 		}
 
-		var task = "assembleDebug";
+		var task = project.targetFlags.exists("bundle") ? "bundleDebug" : "assembleDebug";
 
 		if (project.keystore != null)
 		{
-			task = "assembleRelease";
+			if (StringTools.startsWith(task, "bundle"))
+			{
+				task = "bundleRelease";
+			}
+			else
+			{
+				task = "assembleRelease";
+			}
 		}
 
 		if (project.environment.exists("ANDROID_GRADLE_TASK"))
@@ -193,7 +200,7 @@ class AndroidHelper
 		}
 	}
 
-	public static function install(project:HXProject, targetPath:String, deviceID:String = null):String
+	public static function install(project:HXProject, targetPath:String, deviceID:String = null, isBundle:Bool = false):String
 	{
 		if (!FileSystem.exists(adbPath + adbName))
 		{
@@ -265,25 +272,56 @@ class AndroidHelper
 			System.runCommand(adbPath, adbName, ["-s", deviceID, "shell", "input", "keyevent", "82"]);
 		}
 
-		var args = ["install", "-r"];
+		final executableName:String = (isBundle) ? "java -jar " + Haxelib.getPath(new Haxelib("lime")) + "/templates/bin/android/bundletool.jar" : "adb";
+		var args:Array<String>;
 
-		// if (getDeviceSDKVersion (deviceID) > 16) {
-
-		args.push("-d");
-
-		// }
-
-		args.push(targetPath);
-
-		if (deviceID != null && deviceID != "")
+		if (isBundle)
 		{
-			args.unshift(deviceID);
-			args.unshift("-s");
+			final apksPath:String = haxe.io.Path.withoutExtension(targetPath) + ".apks";
 
-			connect(deviceID);
+			if (FileSystem.exists(apksPath))
+				FileSystem.deleteFile(apksPath);
+
+			args = ["build-apks"];
+
+			args.push("--bundle=" + targetPath);
+			args.push("--output=" + apksPath);
+			args.push("--mode=universal");
+			args.push("--ks=" + project.keystore.path);
+			args.push("--ks-pass=pass:" + project.keystore.password);
+			args.push("--ks-key-alias=" + project.keystore.alias);
+			args.push("--key-pass=pass:" + project.keystore.password);
+
+			System.runCommand(project.environment.get("JAVA_HOME") + 'bin/', executableName, args);
+
+			args = ["install-apks"];
+			args.push("--apks=" + apksPath);
+
+			if (deviceID != null && deviceID != "")
+				connect(deviceID);
+		}
+		else
+		{
+			args = ["install", "-r"];
+
+			// if (getDeviceSDKVersion (deviceID) > 16) {
+
+				args.push("-d");
+
+			// }
+
+			args.push(targetPath);
+
+			if (deviceID != null && deviceID != "")
+			{
+				args.unshift(deviceID);
+				args.unshift("-s");
+
+				connect(deviceID);
+			}
 		}
 
-		System.runCommand(adbPath, adbName, args);
+		System.runCommand((isBundle) ? project.environment.get("JAVA_HOME") + 'bin/' : adbPath, executableName, args);
 
 		return deviceID;
 	}
@@ -336,7 +374,7 @@ class AndroidHelper
 
 	public static function run(activityName:String, deviceID:String = null):Void
 	{
-		var args = ["shell", "am", "start", "-a", "android.intent.action.MAIN", "-n", activityName];
+		var args = ["shell", "am"];
 
 		if (deviceID != null && deviceID != "")
 		{
@@ -346,7 +384,9 @@ class AndroidHelper
 			connect(deviceID);
 		}
 
-		System.runCommand(adbPath, adbName, args);
+		System.runCommand(adbPath, adbName, args.concat(["force-stop", activityName]));
+
+		System.runCommand(adbPath, adbName, args.concat(["start", "-a", "android.intent.action.MAIN", "-c", "android.intent.category.LAUNCHER", "-n", activityName]));
 	}
 
 	public static function trace(project:HXProject, debug:Bool, deviceID:String = null, customFilter:String = null):Void
@@ -358,15 +398,29 @@ class AndroidHelper
 
 		// Use -DFULL_LOGCAT or  <set name="FULL_LOGCAT" /> if you do not want to filter log messages
 
-		var args = ["logcat"];
+		var args = [];
 
 		if (deviceID != null && deviceID != "")
 		{
-			args.unshift(deviceID);
-			args.unshift("-s");
+			args.push("-s");
+			args.push(deviceID);
 
 			connect(deviceID);
 		}
+
+		var pidString = StringTools.trim(System.runProcess(adbPath, adbName, args.concat(["shell", "pidof", "-s", project.meta.packageName])));
+
+		args.push("logcat");
+
+		System.runCommand(adbPath, adbName, args.concat(["-c"]));
+
+		var pidInt = Std.parseInt(pidString);
+
+		if (pidInt != null)
+			args.push('--pid=' + pidInt);
+
+		args.push("-v");
+		args.push("brief");
 
 		if (customFilter != null)
 		{
@@ -374,7 +428,6 @@ class AndroidHelper
 		}
 		else if (project.environment.exists("FULL_LOGCAT") || Log.verbose)
 		{
-			System.runCommand(adbPath, adbName, args.concat(["-c"]));
 			System.runCommand(adbPath, adbName, args);
 		}
 		else if (debug)
