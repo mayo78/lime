@@ -14,6 +14,7 @@ import js.html.MouseEvent;
 import js.html.Node;
 import js.html.TextAreaElement;
 import js.html.TouchEvent;
+import js.html.URL;
 import js.html.ClipboardEvent;
 import js.Browser;
 import lime._internal.graphics.ImageCanvasUtil;
@@ -77,6 +78,8 @@ class HTML5Window
 	private var unusedTouchesPool = new List<Touch>();
 
 	private var __focusPending:Bool;
+
+	private var __stopMousePropagation = false;
 
 	public function new(parent:Window)
 	{
@@ -218,6 +221,8 @@ class HTML5Window
 
 			element.addEventListener("contextmenu", handleContextMenuEvent, true);
 
+			element.addEventListener("dragenter", handleDragEvent, true);
+			element.addEventListener("dragleave", handleDragEvent, true);
 			element.addEventListener("dragstart", handleDragEvent, true);
 			element.addEventListener("dragover", handleDragEvent, true);
 			element.addEventListener("drop", handleDragEvent, true);
@@ -240,12 +245,15 @@ class HTML5Window
 		}
 	}
 
-	public function alert(message:String, title:String):Void
+	public function alert(type:lime.ui.MessageBoxType, message:String, title:String, buttons:Array<String>):Int
 	{
 		if (message != null)
 		{
 			Browser.alert(message);
+			return 0;
 		}
+
+		return -1;
 	}
 
 	public function close():Void
@@ -381,6 +389,11 @@ class HTML5Window
 
 	public function focus():Void {}
 
+	public function setVSync(mode:lime.ui.WindowVSyncMode):Bool
+	{
+		return false;
+	}
+
 	private function focusTextInput():Void
 	{
 		// Avoid changing focus multiple times per frame.
@@ -402,6 +415,11 @@ class HTML5Window
 	public function getDisplay():Display
 	{
 		return System.getDisplay(0);
+	}
+
+	public function getNativeHandle():Dynamic
+	{
+		return 0;
 	}
 
 	public function getDisplayMode():DisplayMode
@@ -480,39 +498,58 @@ class HTML5Window
 	private function handleCutOrCopyEvent(event:ClipboardEvent):Void
 	{
 		var text = Clipboard.text;
-		if (text == null) {
+		if (text == null)
+		{
 			text = "";
 		}
 		event.clipboardData.setData("text/plain", text);
 		if (event.cancelable) event.preventDefault();
 	}
 
-	private function handleDragEvent(event:DragEvent):Bool
+	private function handleDragEvent(event:DragEvent):Void
 	{
-		switch (event.type)
+		if (event.cancelable)
 		{
-			case "dragstart":
-				if (cast(event.target, Element).nodeName.toLowerCase() == "img" && event.cancelable)
-				{
-					event.preventDefault();
-					return false;
-				}
-
-			case "dragover":
-				event.preventDefault();
-				return false;
-
-			case "drop":
-				// TODO: Create a formal API that supports HTML5 file objects
-				if (event.dataTransfer != null && event.dataTransfer.files.length > 0)
-				{
-					parent.onDropFile.dispatch(cast event.dataTransfer.files);
-					event.preventDefault();
-					return false;
-				}
+			event.preventDefault();
 		}
 
-		return true;
+		switch (event.type)
+		{
+			case "dragenter":
+				parent.onDropBegin.dispatch();
+			case "dragleave":
+				parent.onDropComplete.dispatch(event.clientX, event.clientY);
+			case "dragover":
+				parent.onDropPosition.dispatch(event.clientX, event.clientY);
+			case "drop":
+				if (event.dataTransfer != null)
+				{
+					// TODO: Create a formal API that supports HTML5 file objects
+					if (event.dataTransfer.files != null && event.dataTransfer.files.length > 0)
+					{
+						for (file in event.dataTransfer.files)
+						{
+							parent.onDropFile.dispatch(cast file, "html5", event.clientX, event.clientY);
+						}
+					}
+					else
+					{
+						var text = event.dataTransfer.getData("text/plain");
+
+						if (text == null || text == "")
+						{
+							text = event.dataTransfer.getData("text/uri-list");
+						}
+
+						if (text != null && text != "")
+						{
+							parent.onDropText.dispatch(text, "html5", event.clientX, event.clientY);
+						}
+					}
+				}
+
+				parent.onDropComplete.dispatch(event.clientX, event.clientY);
+		}
 	}
 
 	private function handleFocusEvent(event:FocusEvent):Void
@@ -655,9 +692,21 @@ class HTML5Window
 				case "mousedown":
 					if (event.currentTarget == parent.element)
 					{
-						// Release outside browser window
+						// while the mouse button is down, and the mouse has
+						// moved outside the bounds of the parent element, we
+						// want both onMouseMove and onMouseUp to continue to be
+						// dispatched. otherwise, dragging objects around with
+						// the mouse will appear broken.
+						// however, if the mouse button isn't down, and the
+						// mouse is outside the bounds of the parent element,
+						// then onMouseMove and onMouseUp don't need to be
+						// dispatched.
+						// Flash embedded in HTML worked similarly.
 						Browser.window.addEventListener("mouseup", handleMouseEvent);
+						Browser.window.addEventListener("mousemove", handleMouseEvent);
 					}
+					// just to be safe, clear the flag on every mouse down
+					__stopMousePropagation = false;
 
 					parent.clickCount = event.detail;
 					parent.onMouseDown.dispatch(x, y, event.button);
@@ -691,12 +740,18 @@ class HTML5Window
 					}
 
 				case "mouseup":
-					Browser.window.removeEventListener("mouseup", handleMouseEvent);
-
-					if (event.currentTarget == parent.element)
+					// see comment below for mousemove for an explanation of
+					// what the __stopMousePropagation flag is used for.
+					if (__stopMousePropagation && event.currentTarget != parent.element)
 					{
-						event.stopPropagation();
+						__stopMousePropagation = false;
+						return;
 					}
+
+					Browser.window.removeEventListener("mouseup", handleMouseEvent);
+					Browser.window.removeEventListener("mousemove", handleMouseEvent);
+
+					__stopMousePropagation = event.currentTarget == parent.element;
 
 					parent.clickCount = event.detail;
 					parent.onMouseUp.dispatch(x, y, event.button);
@@ -708,6 +763,45 @@ class HTML5Window
 					}
 
 				case "mousemove":
+					// this same listener is added to the parent element and to
+					// the browser window for both the mousemove and the mouseup
+					// event types, if mousedown happens first. this allows both
+					// onMouseMove and onMouseUp to be dispatched if the mouse
+					// moves outside the bounds of the parent element.
+
+					// since browser mouse events bubble, this listener will be
+					// called for the parent element first, as long as the mouse
+					// is still over the parent element. in that case, when the
+					// listener is called for the browser window, it should
+					// return early so that onMouseMove or onMouseUp isn't
+					// dispatched twice. this is done by checking the
+					// __stopMousePropagation flag when the current target isn't
+					// the parent element.
+
+					// however, if the mouse isn't over the parent element, the
+					// listener will be called only for the browser window, and
+					// not the parent element. in that case, it can proceed to
+					// dispatch either onMouseMove or onMouseUp, since this
+					// listener was called only once.
+
+					// again, this applies only if the mouse button is down. if
+					// the mouse button isn't down, then the listener won't be
+					// added to the browser window, and event won't be
+					// dispatched outside the bounds of the parent element.
+
+					if (__stopMousePropagation && event.currentTarget != parent.element)
+					{
+						// why not call event.stopPropagation() here? well,
+						// other JS code in the page may still be interested in
+						// the event. listening for the same events on both the
+						// parent element and on the browser window is just an
+						// implementation detail and shouldn't affect other
+						// listeners.
+						__stopMousePropagation = false;
+						return;
+					}
+					__stopMousePropagation = event.currentTarget == parent.element;
+
 					if (x != cacheMouseX || y != cacheMouseY)
 					{
 						parent.onMouseMove.dispatch(x, y);
@@ -805,7 +899,11 @@ class HTML5Window
 			}
 		}
 
-		var touch, x, y, cacheX, cacheY;
+		var touch:Touch;
+		var x:Float;
+		var y:Float;
+		var cacheX:Float;
+		var cacheY:Float;
 
 		for (data in event.changedTouches)
 		{
@@ -1239,7 +1337,6 @@ class HTML5Window
 				textInput.removeEventListener('paste', handlePasteEvent, true);
 				textInput.removeEventListener('compositionstart', handleCompositionstartEvent, true);
 				textInput.removeEventListener('compositionend', handleCompositionendEvent, true);
-
 			}
 		}
 
@@ -1283,7 +1380,8 @@ class HTML5Window
 	{
 		if (!parent.__resizable) return;
 
-		var elementWidth, elementHeight;
+		var elementWidth:Float;
+		var elementHeight:Float;
 
 		if (parent.element != null)
 		{
@@ -1309,8 +1407,8 @@ class HTML5Window
 				{
 					if (parent.__width != elementWidth || parent.__height != elementHeight)
 					{
-						parent.__width = elementWidth;
-						parent.__height = elementHeight;
+						parent.__width = Std.int(elementWidth);
+						parent.__height = Std.int(elementHeight);
 
 						if (canvas != null)
 						{
@@ -1329,7 +1427,7 @@ class HTML5Window
 							div.style.height = elementHeight + "px";
 						}
 
-						parent.onResize.dispatch(elementWidth, elementHeight);
+						parent.onResize.dispatch(Std.int(elementWidth), Std.int(elementHeight));
 					}
 				}
 				else

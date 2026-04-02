@@ -113,6 +113,27 @@ namespace lime {
 	}
 
 
+	void Bytes::WriteFile (const char* path) {
+
+		FILE_HANDLE *file = lime::fopen (path, "wb");
+
+		if (!file) {
+
+			return;
+
+		}
+
+		if (length > 0) {
+
+			lime::fwrite (b, 1, length, file);
+
+		}
+
+		lime::fclose (file);
+
+	}
+
+
 	void Bytes::Resize (int size) {
 
 		if (size != length || (length > 0 && !b)) {
@@ -218,7 +239,6 @@ namespace lime {
 	
 	    mutex.Unlock();
 	}
-
 
 	void Bytes::Set (const QuickVec<unsigned char> data) {
 

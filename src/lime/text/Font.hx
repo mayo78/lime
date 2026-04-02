@@ -38,12 +38,12 @@ class Font
      	* The ascender value of the font.
      	*/
 	public var ascender:Int;
-	
+
 	 /**
      	* The descender value of the font.
      	*/
 	public var descender:Int;
-	
+
 	/**
      	* The height of the font.
      	*/
@@ -59,7 +59,7 @@ class Font
      	*/
 	public var numGlyphs:Int;
 
-	
+
 	public var src:Dynamic;
 
 	/**
@@ -71,6 +71,16 @@ class Font
     	* The underline thickness of the font.
     	*/
 	public var underlineThickness:Int;
+
+	/**
+    	* The underline position of the font.
+    	*/
+	public var strikethroughPosition:Int;
+
+	/**
+    	* The underline thickness of the font.
+    	*/
+	public var strikethroughThickness:Int;
 
 	/**
      	* The units per EM of the font.
@@ -98,29 +108,29 @@ class Font
 
 		if (!__init)
 		{
-			#if js if (ascender == untyped #if haxe4 js.Syntax.code #else __js__ #end ("undefined")) #end ascender = 0;
+			#if js if (ascender == untyped js.Syntax.code("undefined")) #end ascender = 0;
 			#if js
-			if (descender == untyped #if haxe4 js.Syntax.code #else __js__ #end ("undefined"))
+			if (descender == untyped js.Syntax.code("undefined"))
 			#end
 			descender = 0;
 			#if js
-			if (height == untyped #if haxe4 js.Syntax.code #else __js__ #end ("undefined"))
+			if (height == untyped js.Syntax.code("undefined"))
 			#end
 			height = 0;
 			#if js
-			if (numGlyphs == untyped #if haxe4 js.Syntax.code #else __js__ #end ("undefined"))
+			if (numGlyphs == untyped js.Syntax.code("undefined"))
 			#end
 			numGlyphs = 0;
 			#if js
-			if (underlinePosition == untyped #if haxe4 js.Syntax.code #else __js__ #end ("undefined"))
+			if (underlinePosition == untyped js.Syntax.code("undefined"))
 			#end
 			underlinePosition = 0;
 			#if js
-			if (underlineThickness == untyped #if haxe4 js.Syntax.code #else __js__ #end ("undefined"))
+			if (underlineThickness == untyped js.Syntax.code("undefined"))
 			#end
 			underlineThickness = 0;
 			#if js
-			if (unitsPerEM == untyped #if haxe4 js.Syntax.code #else __js__ #end ("undefined"))
+			if (unitsPerEM == untyped js.Syntax.code("undefined"))
 			#end
 			unitsPerEM = 0;
 
@@ -427,7 +437,8 @@ class Font
 			var offsetY = 0;
 			var maxRows = 0;
 
-			var width, height;
+			var width:Int;
+			var height:Int;
 			var i = 0;
 
 			while (i < count)
@@ -489,7 +500,10 @@ class Font
 			offsetY = 0;
 			maxRows = 0;
 
-			var index, x, y, image;
+			var index:Int;
+			var x:Int;
+			var y:Int;
+			var image:Image;
 
 			for (i in 0...count)
 			{
@@ -612,6 +626,8 @@ class Font
 			numGlyphs = NativeCFFI.lime_font_get_num_glyphs(src);
 			underlinePosition = NativeCFFI.lime_font_get_underline_position(src);
 			underlineThickness = NativeCFFI.lime_font_get_underline_thickness(src);
+			strikethroughPosition = NativeCFFI.lime_font_get_strikethrough_position(src);
+			strikethroughThickness = NativeCFFI.lime_font_get_strikethrough_thickness(src);
 			unitsPerEM = NativeCFFI.lime_font_get_units_per_em(src);
 		}
 		#end
@@ -653,7 +669,8 @@ class Font
 			var timeout = 3000;
 			var intervalLength = 50;
 			var intervalCount = 0;
-			var loaded, timeExpired;
+			var loaded:Bool;
+			var timeExpired:Bool;
 
 			var checkFont = function()
 			{

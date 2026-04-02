@@ -61,7 +61,7 @@ class FlashWindow
 		create();
 	}
 
-	public function alert(message:String, title:String):Void {}
+	public function alert(type:lime.ui.MessageBoxType, message:String, title:String, buttons:Array<String>):Int { return -1; }
 
 	public function close():Void
 	{
@@ -290,6 +290,11 @@ class FlashWindow
 
 	public function focus():Void {}
 
+	public function setVSync(mode:WindowVSyncMode):Bool
+	{
+		return false;
+	}
+
 	public function getCursor():MouseCursor
 	{
 		return cursor;
@@ -298,6 +303,11 @@ class FlashWindow
 	public function getDisplay():Display
 	{
 		return System.getDisplay(0);
+	}
+
+	public function getNativeHandle():Dynamic
+	{
+		return 0;
 	}
 
 	public function getDisplayMode():DisplayMode

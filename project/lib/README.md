@@ -5,6 +5,7 @@ Lime includes code from several other C/C++ libraries, listed below. Lime prefer
 
 - [**Cairo**](https://www.cairographics.org/) | [primary repo](https://gitlab.freedesktop.org/cairo/cairo) | [GitHub mirror](https://github.com/freedesktop/cairo)
 - [**cURL**](https://curl.se/) | [primary repo](https://github.com/curl/curl)
+- [**dr_libs**](https://github.com/mackron/dr_libs) | [primary repo](https://github.com/mackron/dr_libs)
 - **efsw** | [primary repo](https://github.com/SpartanJ/efsw)
 - [**FreeType**](https://freetype.org/) | [primary repo](https://gitlab.freedesktop.org/freetype/freetype) | [GitHub mirror](https://github.com/freetype/freetype)
 - [**HarfBuzz**](https://harfbuzz.github.io/) | [primary repo](https://github.com/harfbuzz/harfbuzz)
@@ -19,7 +20,6 @@ Lime includes code from several other C/C++ libraries, listed below. Lime prefer
 - [**Pixman**](http://pixman.org/) | [primary repo](https://gitlab.freedesktop.org/pixman/pixman) | [GitHub mirror](https://github.com/freedesktop/pixman)
 - [**libpng**](http://www.libpng.org/pub/png/libpng.html) | [primary repo](https://sourceforge.net/p/libpng/code) | [GitHub mirror](https://github.com/glennrp/libpng)[^1]
 - [**SDL**](https://www.libsdl.org/) | [primary repo](https://github.com/libsdl-org/SDL)
-- [**tiny file dialogs**](https://sourceforge.net/projects/tinyfiledialogs/) | [primary repo](https://sourceforge.net/p/tinyfiledialogs/code) | [unofficial GitHub mirror](https://github.com/openfl/libtinyfiledialogs)[^1]
 - [**Vorbis**](https://www.xiph.org/vorbis/) | [primary repo](https://github.com/xiph/vorbis)
 - [**libvpx**](https://www.webmproject.org/tools/) | [primary repo](https://chromium.googlesource.com/webm/libvpx/) | [GitHub mirror](https://github.com/webmproject/libvpx/)
 - [**libwebm**](https://www.webmproject.org/about/) | [primary repo](https://chromium.googlesource.com/webm/libwebm) | [GitHub mirror](https://github.com/webmproject/libwebm)

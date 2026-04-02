@@ -38,6 +38,7 @@ class HXProject extends Script
 	public var haxelibs:Array<Haxelib>;
 	public var host(get, null):Platform;
 	public var icons:Array<Icon>;
+	public var adaptiveIcon:AdaptiveIcon;
 	public var javaPaths:Array<String>;
 	public var keystore:Keystore;
 	public var languages:Array<String>;
@@ -215,6 +216,11 @@ class HXProject extends Script
 		splashScreens = new Array<SplashScreen>();
 		targetHandlers = new Map<String, String>();
 
+		config.set("android", { manifest:{}, application:{}, activity:{} });
+		config.get("android.manifest").xmlChildren = [];
+		config.get("android.application").xmlChildren = [];
+		config.get("android.activity").xmlChildren = [];
+
 		initializeDefines();
 	}
 
@@ -267,6 +273,11 @@ class HXProject extends Script
 		for (icon in icons)
 		{
 			project.icons.push(icon.clone());
+		}
+
+		if (adaptiveIcon != null)
+		{
+			project.adaptiveIcon = adaptiveIcon.clone();
 		}
 
 		project.javaPaths = javaPaths.copy();
@@ -547,7 +558,7 @@ class HXProject extends Script
 		}
 
 		var files = ["include.lime", "include.nmml", "include.xml", "include.hxp"];
-		var projectFile = null;
+		var projectFile:String = null;
 
 		for (file in files)
 		{
@@ -558,7 +569,7 @@ class HXProject extends Script
 			}
 		}
 
-		var project = null;
+		var project:HXProject = null;
 
 		if (projectFile != null)
 		{
@@ -774,13 +785,6 @@ class HXProject extends Script
 				defines.set("cpp", "1");
 				defines.set("mingw", "1");
 			}
-			else
-			{
-				targetFlags.set("neko", "1");
-
-				defines.set("targetType", "neko");
-				defines.set("neko", "1");
-			}
 		}
 		else if (target == Platform.WEB_ASSEMBLY)
 		{
@@ -916,6 +920,11 @@ class HXProject extends Script
 			haxelibs = ArrayTools.concatUnique(haxelibs, project.haxelibs, true, "name");
 			icons = ArrayTools.concatUnique(icons, project.icons);
 			javaPaths = ArrayTools.concatUnique(javaPaths, project.javaPaths, true);
+
+			if (project.adaptiveIcon != null)
+			{
+				adaptiveIcon = project.adaptiveIcon;
+			}
 
 			if (keystore == null)
 			{
@@ -1228,7 +1237,7 @@ class HXProject extends Script
 		// Reflect.setField (context, "sslCaCert", sslCaCert);
 		context.sslCaCert = "";
 
-		var compilerFlags = [];
+		var compilerFlags:Array<String> = [];
 
 		for (haxelib in haxelibs)
 		{
@@ -1279,7 +1288,7 @@ class HXProject extends Script
 				Log.verbose = cache;
 
 				var split = output != null ? output.split("\n") : [];
-				var haxelibName = null;
+				var haxelibName:String = null;
 
 				for (arg in split)
 				{

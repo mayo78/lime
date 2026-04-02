@@ -60,6 +60,7 @@ class TizenPlatform extends PlatformTarget
 				hardware: true,
 				display: 0,
 				resizable: true,
+				transparent: false,
 				borderless: false,
 				orientation: Orientation.AUTO,
 				vsync: false,
@@ -178,7 +179,7 @@ class TizenPlatform extends PlatformTarget
 		var device = (command == "rebuild" || !targetFlags.exists("simulator"));
 		var simulator = (command == "rebuild" || targetFlags.exists("simulator"));
 
-		var commands = [];
+		var commands:Array<Array<String>> = [];
 
 		if (device) commands.push(["-Dtizen"]);
 		if (simulator) commands.push(["-Dtizen", "-Dsimulator"]);
@@ -225,6 +226,11 @@ class TizenPlatform extends PlatformTarget
 		if (project.targetFlags.exists("xml"))
 		{
 			project.haxeflags.push("-xml " + targetDirectory + "/types.xml");
+		}
+
+		if (project.targetFlags.exists("json"))
+		{
+			project.haxeflags.push("--json " + targetDirectory + "/types.json");
 		}
 
 		var context = project.templateContext;

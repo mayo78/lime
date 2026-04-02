@@ -1,13 +1,19 @@
 <xml>
-
-	<set name="PLATFORM" value="android-21" if="android" />
-	<set name="HXCPP_CPP11" value="1" />
+	<set name="HXCPP_CPP20" value="1" />
+	<set name="OBJC_ARC" value="1" if="apple" />
 
 	<include name="${HXCPP}/build-tool/BuildCommon.xml" />
 
+	<set name="HXCPP_ANDROID_PLATFORM" value="28" if="android" />
+	<set name="PLATFORM_NUMBER" value="28" if="android" />
+	<set name="HXCPP_IOS_MIN_VERSION" value="11.0" if="iphone" />
+	<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.13" if="mac" />
+
+	<set name="LIME_NX" value="1" if="switch || nx || HX_NX" />
+	<set name="LIME_SDL2" value="1" if="LIME_NX" />
+
 	<set name="ios" value="1" if="iphone" />
 	<set name="tvos" value="1" if="appletv" />
-
 	<!-- Habilita LIME_CAIRO para Switch -->
 	<set name="LIME_CAIRO" value="1" />
 	<!-- Excluye LIME_CURL para Switch -->
@@ -30,31 +36,26 @@
 	<!-- Habilita LIME_OGG para Switch -->
 	<set name="LIME_OGG" value="1" />
 	<!-- Habilita LIME_OPENALSOFT para Switch -->
-	<set name="LIME_OPENALSOFT" value="1" if="windows || linux || mac || android || switch || nx || HX_NX" unless="static_link"/>
-	<set name="LIME_OPENAL" value="1" if="iphone || webassembly || tvos" />
+	<set name="LIME_OPENALSOFT" value="1" if="windows || linux || mac || android || switch || nx || HX_NX || iphone" unless="tvos"/>
+	<set name="LIME_OPENAL" value="1" if="webassembly || tvos" />
 	<!-- Excluye LIME_MOJOAL para Switch -->
-	<set name="LIME_MOJOAL" value="1" if="nx || static_link || winrt || mojoal" unless="LIME_OPENAL || switch || nx || HX_NX" />
+	<set name="LIME_MOJOAL" value="1" if="nx || static_link || winrt || mojoal" unless="LIME_OPENAL || switch || nx || HX_NX || iphone LIME_OPENALSOFT" />
 	<unset name="LIME_OPENALSOFT" if="LIME_MOJOAL" />
 	<set name="LIME_OPENAL" value="1" if="LIME_OPENALSOFT" />
 	<set name="LIME_OPENAL" value="1" if="LIME_MOJOAL" />
 	<!-- Habilita LIME_OPENGL para Switch -->
 	<set name="LIME_OPENGL" value="1" />
+	<set name="LIME_GLAD" value="1" if="LIME_OPENGL" unless="ios || tvos" />
 	<set name="LIME_PIXMAN" value="1" />
 	<!-- Habilita LIME_PNG para Switch -->
 	<set name="LIME_PNG" value="1" />
-	<!-- Define LIME_SDL como 1, pero excl├║yelo de la compilaci├│n interna para Switch -->
-	<set name="LIME_SDL" value="1" unless="switch || nx || HX_NX" />
-	<!-- <set name="LIME_SDL_ANGLE" value="1" if="windows" unless="static_link" /> -->
-	<set name="LIME_SDL_ANGLE" value="1" if="windows LIME_SDL_ANGLE" unless="static_link" />
-	<set name="LIME_SDL_ANGLE" value="1" if="windows angle" unless="static_link" />
-	<set name="LIME_SDL_ANGLE" value="1" if="winrt" />
-	<set name="LIME_TINYFILEDIALOGS" value="1" if="windows || mac || linux" unless="winrt || emscripten || switch || nx || HX_NX"/>
-	<!-- Habilita LIME_VORBIS para Switch -->
+	<set name="LIME_SDL" value="1" unless="LIME_NX" />
 	<set name="LIME_VORBIS" value="1" />
 	<!-- Habilita LIME_ZLIB para Switch -->
 	<set name="LIME_ZLIB" value="1" />
 	<!-- <set name="LIME_VPX" value="1" />
 	<set name="LIME_WEBM" value="1" /> -->
+	<set name="LIME_DRLIBS" value="1" />
 
 	<set name="OUTPUT_DIR" value="../ndll" unless="OUTPUT_DIR" />
 	<set name="NATIVE_TOOLKIT_PATH" value="lib" unless="NATIVE_TOOLKIT_PATH" />
@@ -69,14 +70,24 @@
 	<set name="NATIVE_TOOLKIT_HAVE_SDL" value="1" if="LIME_SDL || nx" />
 	<!-- Agregamos nx aqu├¡ -->
 
-	<set name="NATIVE_TOOLKIT_SDL_STATIC" value="1" />
-	<set name="NATIVE_TOOLKIT_SDL_ANGLE" value="1" if="LIME_SDL_ANGLE" />
-
 	<files id="lime">
 
 		<compilerflag value="-Iinclude" />
 
 		<file name="src/ExternalInterface.cpp" />
+
+
+		<section if="LIME_SDL2">
+
+			<compilerflag value="-DLIME_SDL2" />
+
+		</section>
+
+		<section if="LIME_NX">
+
+			<compilerflag value="-DLIME_NX" />
+
+		</section>
 
 		<!-- Secci├│n principal de Cairo, ahora incluida para Switch -->
 		<section if="LIME_CAIRO">
@@ -97,7 +108,7 @@
 		</section>
 
 		<!-- Secci├│n condicional para LIME_CURL, excluida para Switch -->
-		<section if="LIME_CURL" unless="switch || nx || HX_NX">
+		<section if="LIME_CURL" unless="LIME_NX">
 
 			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/curl/include/" />
 			<compilerflag value="-DLIME_CURL" />
@@ -107,8 +118,20 @@
 
 		</section>
 
+		<section if="LIME_DRLIBS">
+
+			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/dr_libs/" />
+			<compilerflag value="-DLIME_DRLIBS" />
+
+			<file name="src/media/codecs/flac/DrFlac.cpp" />
+			<file name="src/media/codecs/mp3/DrMp3.cpp" />
+			<file name="src/media/codecs/wav/DrWav.cpp" />
+			<file name="src/media/codecs/DrLibsBindings.cpp" />
+
+		</section>
+
 		<!-- Secci├│n condicional para LIME_EFSW, excluida para Switch -->
-		<section if="LIME_EFSW" unless="switch || nx || HX_NX">
+		<section if="LIME_EFSW" unless="LIME_NX">
 
 			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/efsw/include/" />
 			<compilerflag value="-DLIME_EFSW" />
@@ -236,12 +259,10 @@
 			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/vorbis/include/" />
 			<compilerflag value="-DLIME_OGG" />
 
-			<file name="src/media/containers/OGG.cpp" />
-
 		</section>
 
 		<!-- Secci├│n condicional para LIME_OPENAL (ahora incluida para Switch), excluyendo la parte espec├¡fica de MojoAL -->
-		<section if="LIME_OPENAL" unless="switch || nx || HX_NX">
+		<section if="LIME_OPENAL" unless="LIME_NX">
 
 			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/openal/include/" unless="LIME_MOJOAL || emscripten" />
 			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/mojoal/" if="LIME_MOJOAL" />
@@ -269,9 +290,18 @@
 
 		<!-- Secci├│n condicional para LIME_OPENGL (ahora incluida para Switch) -->
 		<section if="LIME_OPENGL">
+
+			<section if="LIME_GLAD">
+
+				<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/glad/include/" />
+				<compilerflag value="-DLIME_GLAD" />
+
+			</section>
+
+			<compilerflag value="-DLIME_OPENGL_GL" if="windows || mac || linux" />
+			<compilerflag value="-DLIME_OPENGL_GLES2" if="android || rpi || emscripten || tizen || ios || tvos" />
 			<compilerflag value="-DLIME_OPENGL" />
-			<!-- Quitar la condici├│n unless="switch ..." -->
-			<!-- <compilerflag value="-I${DEVELOPER_DIR}/Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS${TVOS_VER}.sdk/" if="tvos" /> -->
+
 			<file name="src/graphics/opengl/OpenGLBindings.cpp" />
 		</section>
 
@@ -288,7 +318,7 @@
 		</section>
 
 		<!-- Secci├│n condicional para LIME_SDL, excluida para Switch -->
-		<section if="LIME_SDL" unless="switch || nx || HX_NX">
+		<section if="LIME_SDL" unless="LIME_NX">
 
 			<section if="emscripten">
 
@@ -327,7 +357,6 @@
 			</section>
 
 			<compilerflag value="-DLIME_SDL" />
-			<compilerflag value="-DNATIVE_TOOLKIT_SDL_ANGLE" if="NATIVE_TOOLKIT_SDL_ANGLE" />
 			<compilerflag value="-D__IPHONEOS__" if="ios || tvos" />
 			<compilerflag value="-D__APPLETVOS__" if="tvos" />
 			<compilerflag value="-DAPPLETV" if="tvos" />
@@ -344,7 +373,7 @@
 		</section>
 
 		<!-- Secci├│n espec├¡fica para Switch SDL (no compila archivos internos de SDL) -->
-		<section if="switch || nx || HX_NX">
+		<section if="LIME_NX">
 			<!-- Incluimos los encabezados de DevkitPro aqu├¡ -->
 			<compilerflag value="-I${DEVKITPRO}/portlibs/switch/include" />
 			<compilerflag value="-I${DEVKITPRO}/portlibs/switch/include/SDL2" />
@@ -385,8 +414,8 @@
 			<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/vorbis/include/" />
 			<compilerflag value="-DLIME_VORBIS" />
 
-			<file name="src/media/codecs/vorbis/VorbisBindings.cpp" />
 			<file name="src/media/codecs/vorbis/VorbisFile.cpp" />
+			<file name="src/media/codecs/VorbisBindings.cpp" />
 
 		</section>
 
@@ -411,10 +440,11 @@
 		<file name="src/math/Rectangle.cpp" />
 		<file name="src/math/Vector2.cpp" />
 		<file name="src/media/AudioBuffer.cpp" />
-		<file name="src/media/containers/WAV.cpp" />
 		<file name="src/system/CFFI.cpp" />
 		<file name="src/system/CFFIPointer.cpp" />
 		<file name="src/system/ClipboardEvent.cpp" />
+		<file name="src/system/Display.mm" if="mac || ios" />
+		<file name="src/system/Display.cpp" unless="mac || ios" />
 		<file name="src/system/DisplayMode.cpp" />
 		<file name="src/system/JNI.cpp" if="android" />
 		<file name="src/system/Locale.cpp" unless="mac || ios" />
@@ -424,6 +454,7 @@
 		<file name="src/system/System.mm" if="ios" />
 		<file name="src/system/ValuePointer.cpp" />
 		<file name="src/ui/DropEvent.cpp" />
+		<file name="src/ui/FileDialog.cpp" />
 		<file name="src/ui/GamepadEvent.cpp" />
 		<file name="src/ui/Haptic.mm" if="ios" />
 		<file name="src/ui/JoystickEvent.cpp" />
@@ -443,39 +474,39 @@
 		<file name="${ANDROID_NDK_ROOT}/sources/android/cpufeatures/cpu-features.c" />
 
 	</files>
-
 	<!-- Run setup now so the submodule projects can determine whether clang or GCC will be used. -->
 	<!-- TODO: if https://github.com/HaxeFoundation/hxcpp/issues/930 ever gets resolved, use that instead. -->
 	<setup name="androidNdk" if="android" />
 
 	<include name="lib/cairo-files.xml" />
 	<!-- Incluye curl-files.xml solo si LIME_CURL est├í activo y no es Switch -->
-	<include name="lib/curl-files.xml" if="LIME_CURL" unless="switch || nx || HX_NX" />
+	<include name="lib/curl-files.xml" if="LIME_CURL" unless="LIME_NX" />
 	<!-- Incluye efsw-files.xml solo si LIME_EFSW est├í activo y no es Switch -->
-	<include name="lib/efsw-files.xml" if="LIME_EFSW" unless="switch || nx || HX_NX" />
+	<include name="lib/efsw-files.xml" if="LIME_EFSW" unless="LIME_NX" />
 	<include name="lib/faudio-files.xml" if="LIME_FAUDIO" />
 	<include name="lib/freetype-files.xml" />
 	<include name="lib/harfbuzz-files.xml" />
+	<include name="lib/glad-files.xml" />
 	<include name="lib/jpeg-files.xml" />
 	<include name="lib/lzma-files.xml" />
 	<include name="lib/mbedtls-files.xml" />
 	<!-- Excluir mojoal-files.xml para Switch -->
-	<include name="lib/mojoal-files.xml" if="LIME_MOJOAL" unless="switch || nx || HX_NX" />
+	<include name="lib/mojoal-files.xml" if="LIME_MOJOAL" unless="LIME_NX" />
 	<include name="lib/neko-files.xml" />
 	<include name="lib/ogg-files.xml" />
 	<!-- Incluye openal-files.xml solo si LIME_OPENAL est├í activo y no es Switch -->
-	<include name="lib/openal-files.xml" if="LIME_OPENAL" unless="switch || nx || HX_NX"/>
+	<include name="lib/openal-files.xml" if="LIME_OPENAL" unless="LIME_NX"/>
 	<!-- Incluye pixman-files.xml solo si LIME_PIXMAN est├í activo (ahora incluido para Switch) -->
 	<include name="lib/pixman-files.xml" if="LIME_PIXMAN" />
 	<include name="lib/png-files.xml" />
 	<!-- Excluir sdl-files.xml para Switch -->
-	<include name="lib/sdl-files.xml" if="LIME_SDL" unless="switch || nx || HX_NX" />
-	<include name="lib/tinyfiledialogs-files.xml" />
+	<include name="lib/sdl-files.xml" if="LIME_SDL" unless="LIME_NX" />
 	<include name="lib/vorbis-files.xml" />
 	<include name="lib/vpx-files.xml" />
 	<include name="lib/webm-files.xml" />
 	<!-- Incluir zlib-files.xml -->
 	<include name="lib/zlib-files.xml" />
+	<include name="lib/dr-libs-files.xml" />
 
 	<set name="DEBUGEXTRA" value="-debug" if="fulldebug" />
 	<set name="LIBSUFFIX" value="${HX_TARGET_SUFFIX}" if="HX_TARGET_SUFFIX" />
@@ -490,31 +521,32 @@
 
 		<files id="native-toolkit-cairo" if="LIME_CAIRO" />
 		<!-- Incluye archivos nativos de curl solo si LIME_CURL est├í activo y no es Switch -->
-		<files id="native-toolkit-curl" if="LIME_CURL" unless="switch || nx || HX_NX" />
+		<files id="native-toolkit-curl" if="LIME_CURL" unless="LIME_NX" />
 		<!-- Incluye archivos nativos de efsw solo si LIME_EFSW est├í activo y no es Switch -->
-		<files id="native-toolkit-efsw" if="LIME_EFSW" unless="switch || nx || HX_NX" />
+		<files id="native-toolkit-efsw" if="LIME_EFSW" unless="LIME_NX" />
 		<files id="native-toolkit-faudio" if="LIME_FAUDIO" />
 		<files id="native-toolkit-freetype" if="LIME_FREETYPE" />
 		<files id="native-toolkit-harfbuzz" if="LIME_HARFBUZZ" />
 		<files id="native-toolkit-jpeg" if="LIME_JPEG" />
 		<files id="native-toolkit-lzma" if="LIME_LZMA" />
-		<files id="native-toolkit-mbedtls" if="LIME_MBEDTLS" unless="static_link" />
+		<files id="native-toolkit-mbedtls" if="LIME_MBEDTLS" unless="static_link LIME_NX" />
 		<!-- Incluye archivos nativos de mojoal solo si LIME_MOJOAL est├í activo y no es Switch -->
-		<files id="native-toolkit-mojoal" if="LIME_MOJOAL" unless="switch || nx || HX_NX" />
+		<files id="native-toolkit-mojoal" if="LIME_MOJOAL" unless="LIME_NX" />
 		<files id="native-toolkit-neko" if="LIME_NEKO" />
 		<files id="native-toolkit-ogg" if="LIME_OGG" />
 		<!-- Incluye archivos nativos de openal solo si LIME_OPENALSOFT est├í activo y no es Switch -->
-		<files id="native-toolkit-openal" if="LIME_OPENALSOFT" unless="switch || nx || HX_NX" />
+		<files id="native-toolkit-openal" if="LIME_OPENALSOFT" unless="LIME_NX" />
 		<!-- Incluye archivos nativos de pixman solo si LIME_PIXMAN est├í activo (ahora incluido para Switch) -->
 		<files id="native-toolkit-pixman" if="LIME_PIXMAN" />
 		<files id="native-toolkit-png" if="LIME_PNG" />
 		<!-- Incluye archivos nativos de sdl solo si LIME_SDL est├í activo y no es Switch -->
-		<files id="native-toolkit-sdl" if="LIME_SDL" unless="switch || nx || HX_NX" />
-		<files id="native-toolkit-tinyfiledialogs" if="LIME_TINYFILEDIALOGS" />
+		<files id="native-toolkit-sdl" if="LIME_SDL" unless="LIME_SDL" />
+		<files id="native-toolkit-glad" if="LIME_GLAD" />
 		<files id="native-toolkit-vorbis" if="LIME_VORBIS" />
 		<files id="native-toolkit-vpx" if="LIME_VPX" />
 		<files id="native-toolkit-webm" if="LIME_WEBM" />
 		<files id="native-toolkit-zlib" if="LIME_ZLIB" />
+		<files id="native-toolkit-dr-libs" if="LIME_DRLIBS" />
 
 		<section unless="static_link">
 
@@ -541,6 +573,7 @@
 				<lib name="shell32.lib" />
 				<lib name="comdlg32.lib" />
 				<lib name="setupapi.lib" />
+				<lib name="avrt.lib" if="LIME_OPENALSOFT"/>
 
 				<lib name="usp10.lib" if="LIME_HARFBUZZ" />
 				<lib name="rpcrt4.lib" if="LIME_HARFBUZZ" />
@@ -582,19 +615,27 @@
 				<vflag name="-rpath" value="/opt/homebrew/lib" if="HXCPP_ARM64"/>
 
 				<vflag name="-l" value="iconv" />
-				<vflag name="-framework" value="IOKit" />
-				<vflag name="-framework" value="Foundation" />
 				<vflag name="-framework" value="AppKit" />
 				<vflag name="-framework" value="AudioToolbox" />
 				<vflag name="-framework" value="AudioUnit" />
+				<vflag name="-framework" value="AVFoundation" />
 				<vflag name="-framework" value="Carbon" />
 				<vflag name="-framework" value="Cocoa" />
+				<vflag name="-framework" value="QuartzCore" />
 				<vflag name="-framework" value="CoreAudio" />
+				<vflag name="-framework" value="CoreBluetooth" />
+				<vflag name="-framework" value="CoreHaptics" />
+				<vflag name="-framework" value="CoreMedia" />
 				<vflag name="-framework" value="CoreVideo" />
+				<vflag name="-framework" value="CoreMedia" />
+     		    <vflag name="-framework" value="CoreHaptics" />
 				<vflag name="-framework" value="ForceFeedback" />
-				<vflag name="-framework" value="OpenAL" />
 				<vflag name="-framework" value="OpenGL" />
+				<vflag name="-framework" value="Foundation" />
+				<vflag name="-framework" value="GameController" />
+				<vflag name="-framework" value="IOKit" />
 				<vflag name="-framework" value="SystemConfiguration" />
+				<vflag name="-framework" value="UniformTypeIdentifiers" />
 
 				<lib name="/opt/local/lib/libgc.a" if="LIME_NEKO" />
 				<lib name="-lm" if="LIME_NEKO" />
@@ -614,7 +655,6 @@
 				<lib name="-lm" />
 				<lib name="-lEGL" />
 				<lib name="-lGLESv2" />
-				<lib name="-lGLESv1_CM" />
 				<lib name="-lOpenSLES" />
 
 			</section>
@@ -684,40 +724,37 @@
 
 			<section if="tvos">
 
-				<vflag name="-framework" value="UIKit" />
-				<vflag name="-framework" value="Foundation" />
 				<vflag name="-framework" value="AudioToolbox" />
 				<vflag name="-framework" value="AudioUnit" />
+				<vflag name="-framework" value="AVFoundation" />
 				<vflag name="-framework" value="CoreAudio" />
+				<vflag name="-framework" value="CoreBluetooth" />
 				<vflag name="-framework" value="CoreVideo" />
+				<vflag name="-framework" value="Foundation" />
 				<vflag name="-framework" value="GameController" />
-				<vflag name="-framework" value="OpenAL" />
 				<vflag name="-framework" value="OpenGLES" />
-				<!-- <vflag name="-framework" value="CoreBluetooth" /> -->
+				<vflag name="-framework" value="UIKit" />
 
 				<lib name="-ldl" />
-				<lib name="-lEGL" />
-				<lib name="-lGLESv3" />
 
 			</section>
 
 			<section if="ios">
 
-				<vflag name="-framework" value="UIKit" />
-				<vflag name="-framework" value="Foundation" />
 				<vflag name="-framework" value="AudioToolbox" />
 				<vflag name="-framework" value="AudioUnit" />
+				<vflag name="-framework" value="AVFoundation" />
 				<vflag name="-framework" value="CoreAudio" />
+				<vflag name="-framework" value="CoreBluetooth" />
+				<vflag name="-framework" value="CoreMedia" />
 				<vflag name="-framework" value="CoreMotion" />
 				<vflag name="-framework" value="CoreText" />
 				<vflag name="-framework" value="CoreVideo" />
-				<vflag name="-framework" value="OpenAL" />
+				<vflag name="-framework" value="Foundation" />
 				<vflag name="-framework" value="OpenGLES" />
-				<!-- <vflag name="-framework" value="CoreBluetooth" /> -->
+				<vflag name="-framework" value="UIKit" />
 
 				<lib name="-ldl" />
-				<lib name="-lEGL" />
-				<lib name="-lGLESv3" />
 
 			</section>
 
@@ -733,6 +770,7 @@
 		<target id="lime-legacy" if="lime-legacy" />
 
 	</target>
-	<copyFile name="lime.lib" from="obj/lib/" overwrite="true" toolId="dll" if="windows LIME_HASHLINK" />
+	<copyFile name="lime.lib" from="obj/lib/" overwrite="true" toolId="dll" if="windows LIME_HASHLINK" unless="debug" />
+	<copyFile name="lime-debug.lib" from="obj/lib/" overwrite="true" toolId="dll" if="windows debug LIME_HASHLINK" />
 
 </xml>

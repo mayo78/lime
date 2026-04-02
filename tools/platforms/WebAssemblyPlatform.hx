@@ -65,6 +65,7 @@ class WebAssemblyPlatform extends PlatformTarget
 				hardware: true,
 				display: 0,
 				resizable: true,
+				transparent: false,
 				borderless: false,
 				orientation: Orientation.AUTO,
 				vsync: false,
@@ -101,7 +102,7 @@ class WebAssemblyPlatform extends PlatformTarget
 
 	public override function build():Void
 	{
-		var sdkPath = null;
+		var sdkPath:String = null;
 
 		if (project.defines.exists("EMSCRIPTEN_SDK"))
 		{
@@ -428,6 +429,11 @@ class WebAssemblyPlatform extends PlatformTarget
 		if (project.targetFlags.exists("xml"))
 		{
 			project.haxeflags.push("-xml " + targetDirectory + "/types.xml");
+		}
+
+		if (project.targetFlags.exists("json"))
+		{
+			project.haxeflags.push("-json " + targetDirectory + "/types.json");
 		}
 
 		var context = project.templateContext;
