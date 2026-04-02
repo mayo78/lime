@@ -35,3 +35,8 @@ node_modules
 project/lib_TMP/**
 # fuck this
 project/lib/dr_libs
+ndll/**
+!ndll/Linux64
+!ndll/Mac64
+!ndll/MacArm64
+!ndll/Windows64
