@@ -77,7 +77,7 @@
 	shallow = true
 [submodule "project/lib/hashlink"]
 	path = project/lib/hashlink
-	url = https://github.com/HaxeFoundation/hashlink
+	url = https://github.com/mayo78/hashlink
 	shallow = true
 [submodule "project/lib/dr_libs"]
 	path = project/lib/dr_libs
