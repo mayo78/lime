@@ -277,7 +277,7 @@ class NativeCFFI
 
 	@:cffi private static function lime_system_get_timer():Float;
 
-	@:cffi private static function lime_system_get_timer_ns():Int;
+	@:cffi private static function lime_system_get_timer_ns():haxe.Int64;
 
 	@:cffi private static function lime_system_open_file(path:String):Void;
 
@@ -571,7 +571,7 @@ class NativeCFFI
 	private static var lime_system_get_platform_version = new cpp.Callable<Void->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_system_get_platform_version",
 		"o", false));
 	private static var lime_system_get_timer = new cpp.Callable<Void->Float>(cpp.Prime._loadPrime("lime", "lime_system_get_timer", "d", false));
-	private static var lime_system_get_timer_ns = new cpp.Callable<Void->Int>(cpp.Prime._loadPrime("lime", "lime_system_get_timer_ns", "i", false));
+	private static var lime_system_get_timer_ns = new cpp.Callable<Void->haxe.Int64>(cpp.Prime._loadPrime("lime", "lime_system_get_timer_ns", "l", false));
 	private static var lime_system_open_file = new cpp.Callable<String->cpp.Void>(cpp.Prime._loadPrime("lime", "lime_system_open_file", "sv", false));
 	private static var lime_system_open_url = new cpp.Callable<String->String->cpp.Void>(cpp.Prime._loadPrime("lime", "lime_system_open_url", "ssv", false));
 	private static var lime_text_event_manager_register = new cpp.Callable<cpp.Object->cpp.Object->cpp.Void>(cpp.Prime._loadPrime("lime",
@@ -1282,7 +1282,7 @@ class NativeCFFI
 		return 0;
 	}
 
-	@:hlNative("lime", "hl_system_get_timer_ns") private static function lime_system_get_timer_ns():Int
+	@:hlNative("lime", "hl_system_get_timer_ns") private static function lime_system_get_timer_ns():haxe.Int64
 	{
 		return 0;
 	}
@@ -2105,11 +2105,11 @@ class NativeCFFI
 
 	@:hlNative("lime", "hl_al_delete_sources") private static function lime_al_delete_sources(n:Int, sources:hl.NativeArray<CFFIPointer>):Void {}
 
-	@:hlNative("lime", "lime_al_delete_effect") private static function lime_al_delete_effect(buffer:CFFIPointer):Void {}
+	@:hlNative("lime", "hl_al_delete_effect") private static function lime_al_delete_effect(buffer:CFFIPointer):Void {}
 
-	@:hlNative("lime", "lime_al_delete_filter") private static function lime_al_delete_filter(buffer:CFFIPointer):Void {}
+	@:hlNative("lime", "hl_al_delete_filter") private static function lime_al_delete_filter(buffer:CFFIPointer):Void {}
 
-	@:hlNative("lime", "lime_al_delete_auxiliary_effect_slot") private static function lime_al_delete_auxiliary_effect_slot(slot:CFFIPointer):Void {}
+	@:hlNative("lime", "hl_al_delete_auxiliary_effect_slot") private static function lime_al_delete_auxiliary_effect_slot(slot:CFFIPointer):Void {}
 
 	@:hlNative("lime", "hl_al_disable") private static function lime_al_disable(capability:Int):Void {}
 
@@ -2286,7 +2286,7 @@ class NativeCFFI
 		return null;
 	}
 
-	@:hlNative("lime", "hl_al_get_sourcedv") private static function lime_al_get_sourcedv(source:CFFIPointer, param:Int, count:Int):hl.NativeArray<Float>
+	@:hlNative("lime", "hl_al_get_sourcedv_soft") private static function lime_al_get_sourcedv_soft(source:CFFIPointer, param:Int, count:Int):hl.NativeArray<Float>
 	{
 		return null;
 	}
@@ -2411,7 +2411,7 @@ class NativeCFFI
 		return null;
 	}
 
-	@:hlNative("lime", "hl_alc_get_string_list") private static function lime_alc_get_string_list(device:CFFIPointer, param:Int):hl.NativeArray<Array>
+	@:hlNative("lime", "hl_alc_get_string_list") private static function lime_alc_get_string_list(device:CFFIPointer, param:Int):hl.NativeArray<String>
 	{
 		return null;
 	}
@@ -7041,7 +7041,7 @@ class NativeCFFI
 	@:hlNative("lime", "hl_vorbis_file_decode") private static function lime_vorbis_file_decode(vorbisFile:CFFIPointer, buffer:Bytes, position:Int, length:Int,
 			word:Int):Int
 	{
-		return null;
+		return 0;
 	}
 
 	@:hlNative("lime", "hl_vorbis_file_read_float") private static function lime_vorbis_file_read_float(vorbisFile:CFFIPointer, pcmChannels:Bytes,
@@ -7220,13 +7220,13 @@ class NativeCFFI
 	#if hl
 	@:hlNative("lime", "hl_drlibs_flac_close") private static function lime_drlibs_flac_close(flac:CFFIPointer):Void
 	{
-		return null;
+		return;
 	}
 
 	@:hlNative("lime", "hl_drlibs_flac_decode") private static function lime_drlibs_flac_decode(flac:CFFIPointer, buffer:Bytes, position:Int, length:Int,
 			word:Int):Int
 	{
-		return null;
+		return 0;
 	}
 
 	@:hlNative("lime", "hl_drlibs_flac_from_bytes") private static function lime_drlibs_flac_from_bytes(bytes:Bytes):CFFIPointer
@@ -7246,7 +7246,7 @@ class NativeCFFI
 
 	@:hlNative("lime", "hl_drlibs_flac_seek") private static function lime_drlibs_flac_seek(flac:CFFIPointer, posLow:Int, posHigh:Int):Int
 	{
-		return null;
+		return 0;
 	}
 
 	@:hlNative("lime", "hl_drlibs_flac_tell") private static function lime_drlibs_flac_tell(flac:CFFIPointer):Dynamic
@@ -7262,7 +7262,7 @@ class NativeCFFI
 	@:hlNative("lime", "hl_drlibs_mp3_decode") private static function lime_drlibs_mp3_decode(mp3:CFFIPointer, buffer:Bytes, position:Int, length:Int,
 			word:Int):Int
 	{
-		return null;
+		return 0;
 	}
 
 	@:hlNative("lime", "hl_drlibs_mp3_from_bytes") private static function lime_drlibs_mp3_from_bytes(bytes:Bytes):CFFIPointer
@@ -7282,7 +7282,7 @@ class NativeCFFI
 
 	@:hlNative("lime", "hl_drlibs_mp3_seek") private static function lime_drlibs_mp3_seek(mp3:CFFIPointer, posLow:Int, posHigh:Int):Int
 	{
-		return null;
+		return 0;
 	}
 
 	@:hlNative("lime", "hl_drlibs_mp3_tell") private static function lime_drlibs_mp3_tell(mp3:CFFIPointer):Dynamic
@@ -7297,13 +7297,13 @@ class NativeCFFI
 
 	@:hlNative("lime", "hl_drlibs_mp3_uninit") private static function lime_drlibs_mp3_uninit(mp3:CFFIPointer):Void
 	{
-		return null;
+		return;
 	}
 
 	@:hlNative("lime", "hl_drlibs_wav_decode") private static function lime_drlibs_wav_decode(wav:CFFIPointer, buffer:Bytes, position:Int, length:Int,
 			word:Int):Int
 	{
-		return null;
+		return 0;
 	}
 
 	@:hlNative("lime", "hl_drlibs_wav_from_bytes") private static function lime_drlibs_wav_from_bytes(bytes:Bytes):CFFIPointer
@@ -7323,7 +7323,7 @@ class NativeCFFI
 
 	@:hlNative("lime", "hl_drlibs_wav_seek") private static function lime_drlibs_wav_seek(wav:CFFIPointer, posLow:Int, posHigh:Int):Int
 	{
-		return null;
+		return 0;
 	}
 
 	@:hlNative("lime", "hl_drlibs_wav_tell") private static function lime_drlibs_wav_tell(wav:CFFIPointer):Dynamic
@@ -7338,7 +7338,7 @@ class NativeCFFI
 
 	@:hlNative("lime", "hl_drlibs_wav_uninit") private static function lime_drlibs_wav_uninit(wav:CFFIPointer):Void
 	{
-		return null;
+		return;
 	}
 	#end
 	#end

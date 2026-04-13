@@ -13,6 +13,10 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 import lime._internal.backend.native.NativeCFFI;
+#if hl
+import lime.system.CFFI;
+import lime.system.CFFIPointer;
+#end
 import lime.media.openal.AL;
 import lime.media.openal.ALC;
 import lime.media.openal.ALContext;
@@ -459,11 +463,12 @@ class AudioManager
 		var device = ALC.getContextsDevice(currentContext);
 		if (device == null) return;
 
-		__captureExtSupported = ALC.isExtensionPresent(null, 'ALC_EXT_CAPTURE');
-		__disconnectExtSupported = ALC.isExtensionPresent(null, 'ALC_EXT_disconnect');
-		__reopenDeviceSupported = ALC.isExtensionPresent(null, 'ALC_SOFT_reopen_device');
-		__systemEventsSupported = ALC.isExtensionPresent(null, 'ALC_SOFT_system_events');
-		__enumerateAllSupported = ALC.isExtensionPresent(null, 'ALC_ENUMERATE_ALL_EXT');
+		var _hldevice = #if hl device #else null #end ;
+		__captureExtSupported = ALC.isExtensionPresent(_hldevice, 'ALC_EXT_CAPTURE');
+		__disconnectExtSupported = ALC.isExtensionPresent(_hldevice, 'ALC_EXT_disconnect');
+		__reopenDeviceSupported = ALC.isExtensionPresent(_hldevice, 'ALC_SOFT_reopen_device');
+		__systemEventsSupported = ALC.isExtensionPresent(_hldevice, 'ALC_SOFT_system_events');
+		__enumerateAllSupported = ALC.isExtensionPresent(_hldevice, 'ALC_ENUMERATE_ALL_EXT');
 
 		__latencyExtensionSupported = AL.isExtensionPresent('AL_SOFT_source_latency');
 		__loopPointsSupported = AL.isExtensionPresent('AL_SOFT_loop_points');

@@ -856,6 +856,17 @@ class NativeAudioSource
 			j = i;
 			while (i < max)
 			{
+				#if hl
+				// lazy fix
+				inline function weirdValidate(num:Int)
+				{
+					if (num < 0)
+						return 0;
+					return num;
+				}
+				i = weirdValidate(i);
+				j = weirdValidate(j);
+				#end
 				bufferViews[i] = bufferViews[++j];
 				bufferCurs[i] = bufferCurs[j];
 				bufferLens[i] = bufferLens[j];

@@ -682,7 +682,7 @@ namespace lime {
 	}
 
 
-	int System::GetTimerNS () {
+	uint64_t System::GetTimerNS () {
 
 		return SDL_GetTicksNS ();
 

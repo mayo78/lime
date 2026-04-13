@@ -843,28 +843,28 @@ namespace lime {
 	#define _TCFFIPOINTER _DYN
 
 	DEFINE_HL_PRIM (_VOID,         hl_drlibs_flac_close,              _TCFFIPOINTER);
-	DEFINE_HL_PRIM (_DYN,          hl_drlibs_flac_decode,             _TCFFIPOINTER _TBYTES _I32 _I32 _I32);
+	DEFINE_HL_PRIM (_I32,          hl_drlibs_flac_decode,             _TCFFIPOINTER _TBYTES _I32 _I32 _I32);
 	DEFINE_HL_PRIM (_TCFFIPOINTER, hl_drlibs_flac_from_bytes,         _TBYTES);
 	DEFINE_HL_PRIM (_TCFFIPOINTER, hl_drlibs_flac_from_file,          _STRING);
-	DEFINE_HL_PRIM (_DYN,          hl_drlibs_flac_info,               _TCFFIPOINTER _I32);
+	DEFINE_HL_PRIM (_DYN,          hl_drlibs_flac_info,               _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_I32,          hl_drlibs_flac_seek,               _TCFFIPOINTER _I32 _I32);
-	DEFINE_HL_PRIM (_F64,          hl_drlibs_flac_tell,               _TCFFIPOINTER);
-	DEFINE_HL_PRIM (_F64,          hl_drlibs_flac_total,              _TCFFIPOINTER);
-	DEFINE_HL_PRIM (_DYN,          hl_drlibs_mp3_decode,              _TCFFIPOINTER _TBYTES _I32 _I32 _I32);
+	DEFINE_HL_PRIM (_DYN,          hl_drlibs_flac_tell,               _TCFFIPOINTER);
+	DEFINE_HL_PRIM (_DYN,          hl_drlibs_flac_total,              _TCFFIPOINTER);
+	DEFINE_HL_PRIM (_I32,          hl_drlibs_mp3_decode,              _TCFFIPOINTER _TBYTES _I32 _I32 _I32);
 	DEFINE_HL_PRIM (_TCFFIPOINTER, hl_drlibs_mp3_from_bytes,          _TBYTES);
 	DEFINE_HL_PRIM (_TCFFIPOINTER, hl_drlibs_mp3_from_file,           _STRING);
-	DEFINE_HL_PRIM (_DYN,          hl_drlibs_mp3_info,                _TCFFIPOINTER _I32);
+	DEFINE_HL_PRIM (_DYN,          hl_drlibs_mp3_info,                _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_I32,          hl_drlibs_mp3_seek,                _TCFFIPOINTER _I32 _I32);
-	DEFINE_HL_PRIM (_F64,          hl_drlibs_mp3_tell,                _TCFFIPOINTER);
-	DEFINE_HL_PRIM (_F64,          hl_drlibs_mp3_total,               _TCFFIPOINTER);
+	DEFINE_HL_PRIM (_DYN,          hl_drlibs_mp3_tell,                _TCFFIPOINTER);
+	DEFINE_HL_PRIM (_DYN,          hl_drlibs_mp3_total,               _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_VOID,         hl_drlibs_mp3_uninit,              _TCFFIPOINTER);
-	DEFINE_HL_PRIM (_DYN,          hl_drlibs_wav_decode,              _TCFFIPOINTER _TBYTES _I32 _I32 _I32);
+	DEFINE_HL_PRIM (_I32,          hl_drlibs_wav_decode,              _TCFFIPOINTER _TBYTES _I32 _I32 _I32);
 	DEFINE_HL_PRIM (_TCFFIPOINTER, hl_drlibs_wav_from_bytes,          _TBYTES);
 	DEFINE_HL_PRIM (_TCFFIPOINTER, hl_drlibs_wav_from_file,           _STRING);
-	DEFINE_HL_PRIM (_DYN,          hl_drlibs_wav_info,                _TCFFIPOINTER _I32);
+	DEFINE_HL_PRIM (_DYN,          hl_drlibs_wav_info,                _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_I32,          hl_drlibs_wav_seek,                _TCFFIPOINTER _I32 _I32);
-	DEFINE_HL_PRIM (_F64,          hl_drlibs_wav_tell,                _TCFFIPOINTER);
-	DEFINE_HL_PRIM (_F64,          hl_drlibs_wav_total,               _TCFFIPOINTER);
+	DEFINE_HL_PRIM (_DYN,          hl_drlibs_wav_tell,                _TCFFIPOINTER);
+	DEFINE_HL_PRIM (_DYN,          hl_drlibs_wav_total,               _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_VOID,         hl_drlibs_wav_uninit,              _TCFFIPOINTER);
 
 

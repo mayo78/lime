@@ -871,7 +871,7 @@ namespace lime {
 	DEFINE_HL_PRIM (_DYN,          hl_vorbis_file_raw_tell,           _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_DYN,          hl_vorbis_file_raw_total,          _TCFFIPOINTER _I32);
 	DEFINE_HL_PRIM (_DYN,          hl_vorbis_file_read,               _TCFFIPOINTER _TBYTES _I32 _I32 _BOOL _I32 _BOOL);
-	DEFINE_HL_PRIM (_DYN,          hl_vorbis_file_decode,             _TCFFIPOINTER _TBYTES _I32 _I32 _I32);
+	DEFINE_HL_PRIM (_I32,          hl_vorbis_file_decode,             _TCFFIPOINTER _TBYTES _I32 _I32 _I32);
 	DEFINE_HL_PRIM (_DYN,          hl_vorbis_file_read_float,         _TCFFIPOINTER _TBYTES _I32);
 	DEFINE_HL_PRIM (_BOOL,         hl_vorbis_file_seekable,           _TCFFIPOINTER);
 	DEFINE_HL_PRIM (_I32,          hl_vorbis_file_serial_number,      _TCFFIPOINTER _I32);

@@ -46,7 +46,7 @@ namespace lime {
 			static std::wstring* GetPlatformName ();
 			static std::wstring* GetPlatformVersion ();
 			static double GetTimer ();
-			static int GetTimerNS ();
+			static uint64_t GetTimerNS ();
 			#if defined(HX_WINDOWS) && !defined (HX_WINRT)
 			static int GetWindowsConsoleMode (int handleType);
 			#endif
