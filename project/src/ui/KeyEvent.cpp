@@ -24,6 +24,7 @@ namespace lime {
 		type = KEY_DOWN;
 		windowID = 0;
 		timestamp = 0.0;
+		repeat = false;
 
 	}
 

@@ -2981,7 +2981,7 @@ namespace lime {
 	}
 
 
-	long lime_system_get_timer_ns () {
+	double lime_system_get_timer_ns () {
 
 		return System::GetTimerNS ();
 

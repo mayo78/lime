@@ -813,6 +813,7 @@ class NativeApplication
 		this.keyCode = keyCode;
 		this.modifier = modifier;
 		this.timestamp = timestamp ?? haxe.Int64.ofInt(-1);
+		this.repeat = repeat;
 	}
 
 	public function clone():KeyEventInfo
