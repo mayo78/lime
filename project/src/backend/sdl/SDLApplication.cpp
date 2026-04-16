@@ -523,6 +523,7 @@ namespace lime {
 			keyEvent.modifier = event->key.mod;
 			keyEvent.windowID = event->key.windowID;
 			keyEvent.timestamp = event->key.timestamp;
+			keyEvent.repeat = event->key.repeat;
 
 			if (keyEvent.type == KEY_DOWN) {
 
