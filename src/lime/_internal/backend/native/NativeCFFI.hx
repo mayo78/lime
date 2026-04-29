@@ -1840,8 +1840,6 @@ class NativeCFFI
 	private static var lime_al_get_sourcei = new cpp.Callable<cpp.Object->Int->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_al_get_sourcei", "oio", false));
 	private static var lime_al_get_sourceiv = new cpp.Callable<cpp.Object->Int->Int->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_al_get_sourceiv", "oiio",
 		false));
-	private static var lime_al_get_sourcedv_soft = new cpp.Callable<cpp.Object->Int->Int->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_al_get_sourcedv_soft",
-		"oiio", false));
 	private static var lime_al_get_string = new cpp.Callable<Int->cpp.Object>(cpp.Prime._loadPrime("lime", "lime_al_get_string", "io", false));
 	private static var lime_al_is_buffer = new cpp.Callable<cpp.Object->Bool>(cpp.Prime._loadPrime("lime", "lime_al_is_buffer", "ob", false));
 	private static var lime_al_is_enabled = new cpp.Callable<Int->Bool>(cpp.Prime._loadPrime("lime", "lime_al_is_enabled", "ib", false));

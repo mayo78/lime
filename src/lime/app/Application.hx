@@ -201,7 +201,7 @@ class Application extends Module
 		@param	value	The axis value (between 0 and 1)
 		@param	timestamp 	The timestamp of the event
 	**/
-	public function onGamepadAxisMovePrecise(gamepad:Gamepad, axis:GamepadAxis, value:Float, timestamp:Int64):Void {}
+	public function onGamepadAxisMovePrecise(gamepad:Gamepad, axis:GamepadAxis, value:Float, timestamp:Float):Void {}
 
 	/**
 		Called when a gamepad button down event is fired
@@ -209,7 +209,7 @@ class Application extends Module
 		@param	button	The button that was pressed
 		@param	timestamp 	The timestamp of the event
 	**/
-	public function onGamepadButtonDownPrecise(gamepad:Gamepad, button:GamepadButton, timestamp:Int64):Void {}
+	public function onGamepadButtonDownPrecise(gamepad:Gamepad, button:GamepadButton, timestamp:Float):Void {}
 
 	/**
 		Called when a gamepad button up event is fired
@@ -217,7 +217,7 @@ class Application extends Module
 		@param	button	The button that was released
 		@param	timestamp 	The timestamp of the event
 	**/
-	public function onGamepadButtonUpPrecise(gamepad:Gamepad, button:GamepadButton, timestamp:Int64):Void {}
+	public function onGamepadButtonUpPrecise(gamepad:Gamepad, button:GamepadButton, timestamp:Float):Void {}
 
 	/**
 		Called when a gamepad is connected
@@ -293,7 +293,7 @@ class Application extends Module
 		@param	modifier	The modifier of the key that was pressed
 		@param	timestamp 	The timestamp of the event
 	**/
-	public function onKeyDownPrecise(keyCode:KeyCode, modifier:KeyModifier, timestamp:Int64):Void {}
+	public function onKeyDownPrecise(keyCode:KeyCode, modifier:KeyModifier, timestamp:Float):Void {}
 
 	/**
 		Called when a key up event is fired on the primary window
@@ -301,7 +301,7 @@ class Application extends Module
 		@param	modifier	The modifier of the key that was released
 		@param	timestamp 	The timestamp of the event
 	**/
-	public function onKeyUpPrecise(keyCode:KeyCode, modifier:KeyModifier, timestamp:Int64):Void {}
+	public function onKeyUpPrecise(keyCode:KeyCode, modifier:KeyModifier, timestamp:Float):Void {}
 
 	/**
 		Called when the module is exiting

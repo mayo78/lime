@@ -531,6 +531,24 @@ class Image
 	}
 
 	/**
+		Creates a new `Image` from a Flash `BitmapData` instance
+		@param	bitmapData	A source `bitmapData` to use
+		@return		A new `Image` instance
+	**/
+	public static function fromBitmapData(bitmapData:Dynamic):Image
+	{
+		if (bitmapData == null) return null;
+		#if flash
+		var buffer = new ImageBuffer(null, bitmapData.width, bitmapData.height);
+		buffer.__srcBitmapData = bitmapData;
+		buffer.transparent = bitmapData.transparent;
+		return new Image(buffer);
+		#else
+		return bitmapData.image;
+		#end
+	}
+
+	/**
 		Converts a Base64-encoded `String` into an `Image`, or returns `null` if this is not possible
 		@param	base64	A Base64-encoded `String`
 		@param	type	A mime-type to describe the image data (such as "image/png")
