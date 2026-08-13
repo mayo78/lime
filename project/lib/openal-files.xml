@@ -29,7 +29,7 @@
 
             <compilerflag value="-I${NATIVE_TOOLKIT_PATH}/openal/gsl/include" />
 
-            <compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl/include" if="NATIVE_TOOLKIT_HAVE_SDL" />
+            <!--<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/sdl/include" if="NATIVE_TOOLKIT_HAVE_SDL" />-->
 
         </section>
 
@@ -47,7 +47,7 @@
 
             <compilerflag value="-DAL_LIBTYPE_STATIC" />
 
-            <compilerflag value="-DNATIVE_TOOLKIT_HAVE_SDL" if="NATIVE_TOOLKIT_HAVE_SDL" />
+            <!--<compilerflag value="-DNATIVE_TOOLKIT_HAVE_SDL" if="NATIVE_TOOLKIT_HAVE_SDL" />-->
 
         </section>
 
@@ -137,9 +137,9 @@
 
             </section>
 
-            <file name="${NATIVE_TOOLKIT_PATH}/openal/alc/backends/sdl3.cpp" if="NATIVE_TOOLKIT_HAVE_SDL" />
+            <!--<file name="${NATIVE_TOOLKIT_PATH}/openal/alc/backends/sdl3.cpp" if="NATIVE_TOOLKIT_HAVE_SDL" />-->
 
-            <section unless="NATIVE_TOOLKIT_HAVE_SDL" >
+            <!--<section unless="NATIVE_TOOLKIT_HAVE_SDL" >-->
 
                 <file name="${NATIVE_TOOLKIT_PATH}/openal/alc/backends/opensl.cpp" if="android" />
 
@@ -160,7 +160,7 @@
 
                 </section>
 
-            </section>
+            <!--</section>-->
 
             <section>
 

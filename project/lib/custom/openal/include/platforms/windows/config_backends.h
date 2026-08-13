@@ -1,16 +1,16 @@
-#ifdef NATIVE_TOOLKIT_HAVE_SDL
+//#ifdef NATIVE_TOOLKIT_HAVE_SDL
 
-#define HAVE_WASAPI 0
+//#define HAVE_WASAPI 0
 
-#define HAVE_DSOUND 0
+//#define HAVE_DSOUND 0
 
-#else
+//#else
 
 #define HAVE_WASAPI 1
 
 #define HAVE_DSOUND 1
 
-#endif
+//#endif
 
 #define HAVE_ALSA 0
 
